@@ -1,3 +1,5 @@
+**Canonical v1:** `rfs.py reconstruction-package --spec ... --bundle ... --design-notes ... --out ...` requires the real producer bundle and an image-bound note. It verifies the immutable original scientific fingerprint, all bundle hashes, and that a native artifact has not yet been generated. See [canonical-exchange](canonical-exchange.md). Below: legacy v0.1 packaging details.
+
 # 三源协同重建合同（FigureSpec + Image + Written Guidance）
 
 The editable builder receives three complementary sources:

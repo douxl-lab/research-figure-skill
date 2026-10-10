@@ -1,4 +1,8 @@
-# FigureSpec — scientific contract (v0.1 schema, RFS runtime v0.3)
+**Default for new tasks:** use FigureSpec Exchange v1, identical to the PaperBanana contract in `protocol/schemas/figure-spec-v1.schema.json`, with science nodes, typed directed edges, groups, labels, full original datasets, source hashes and exact evidence citations. See [canonical-exchange](canonical-exchange.md).
+
+**Legacy compatibility only:** the `assets/figure-spec.schema.json` / `0.1.0` format below is retained for earlier projects and test fixtures. Do not silently translate to v1 or claim a model-generated figure was verified.
+
+# FigureSpec — canonical v1 + historical v0.1 compatibility
 
 `assets/figure-spec.schema.json` describes the **FigureSpec JSON document**. Runtime version (`0.3.0`) and schema version (`0.1.0`) are different version axes; the schema keeps its legacy version for compatibility while adding optional design/generation fields. Run `python scripts/rfs.py validate --spec /PATH/spec.json`.
 

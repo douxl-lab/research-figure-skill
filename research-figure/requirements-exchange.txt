@@ -1,0 +1,3 @@
+# Canonical FigureSpec v1 and result bundle validation. No provider credentials.
+jsonschema>=4.23,<5
+Pillow>=10.4,<13

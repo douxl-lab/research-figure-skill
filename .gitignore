@@ -183,3 +183,6 @@ id_ed25519*
 **/generated/
 **/checkpoints/
 **/screenshots/
+
+# Reproducible offline CI peer checkout is runtime-only
+/_peer/

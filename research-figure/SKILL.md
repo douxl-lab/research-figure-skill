@@ -5,7 +5,7 @@ description: >-
 license: MIT
 compatibility: Python 3.10+ CLI; matplotlib for numeric plots. Creative image generation requires a capable host image model or separately installed authorized PaperBanana. Editable PPTX/draw.io requires an actual supported native backend; none is bundled.
 metadata:
-  version: "0.3.2"
+  version: "0.4.0"
   category: "scientific-figure-orchestration"
 ---
 
@@ -18,6 +18,12 @@ metadata:
 Use this skill when the *deliverable* is a research figure, its visual-direction prompt, its figure-source editing, or a figure-quality audit. A discussion about ML architecture or prompt engineering without producing a scientific figure needs no RFS activation. Respect explicitly requested specialist skills when the user wants only their specific operation. For scientific image panels, preserve real empirical pixels; do not use generative art as observations.
 
 RFS owns **scientific figure routing, cross-model prompt compilation, source contracts and final evidence checks**. Do not reproduce PaperBanana's internal Retriever/Planner/Stylist/Visualizer/Critic pipeline or run two competing creation agents. paper-fig / Sivia are optional *native-reconstruction* backends after a reference exists.
+
+## Shared canonical protocol (new tasks)
+
+Use **FigureSpec Exchange v1 (`schema_version: "1.0.0"`)** as the science authority for *all new research figures*, shared unchanged with `douxl-lab/PaperBanana`. The canonical contract and schema live in `protocol/`; read [canonical-exchange](references/canonical-exchange.md) when running those paths. Match the producer descriptor before external generation; fail closed on version/schema/validator mismatch. Never convert to a mere prompt summary. Retain the complete sources, evidence quotes, node/edge IDs, measured datasets and scientific fingerprint.
+
+Existing FigureSpec `0.1.0` under `assets/` is a **legacy compatibility format only**. Do not silently convert it or claim that unverified structure is science. New v1 quantitative figures use source-data plotting, not image generation; no API needed. For a canonical v1 figure, `rfs.py validate`, `route`, `run`, `prompt`, `audit`, `reconstruction-package`, and `audit-package` call the canonical boundary. A new v1 `reconstruction-package` requires `--bundle` and `--design-notes` tied to that actual selected image.
 
 ## Quick route
 

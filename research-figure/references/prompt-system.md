@@ -47,7 +47,7 @@ For image-edit tools the host **must attach the image bytes**, not merely put it
 
 ## Fit to PaperBanana without double planning
 
-PaperBanana's own five agents already plan, style, visualize and critique. The `rfs.py run --engine paperbanana --allow-external` adapter feeds it a compact scientific and design-intent brief instead of spawning another outer Planner/Stylist/Critic sequence. The standalone model profiles are most relevant to *direct host image generation* or explicitly selected model-specific work.
+PaperBanana's own five agents already plan, style, visualize and critique. Canonical v1 requests pass the *full unchanged FigureSpec*, verified protocol descriptor and original source, not a lossy text summary. The `rfs.py run --engine paperbanana --allow-external` adapter feeds it a compact scientific and design-intent brief instead of spawning another outer Planner/Stylist/Critic sequence. The standalone model profiles are most relevant to *direct host image generation* or explicitly selected model-specific work.
 
 ## Candidate -> approved design
 

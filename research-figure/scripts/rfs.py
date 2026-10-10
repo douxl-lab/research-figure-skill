@@ -18,6 +18,7 @@ from plotting import render_plot
 from prompting import save_prompt_pack, save_comparison
 from model_catalog import catalog
 from reconstruction import create_reconstruction_package, audit_reconstruction_package
+import bridge
 
 
 def _emit(data: object) -> None:
@@ -80,6 +81,17 @@ def _ensure_new(out: Path, names: tuple[str, ...], overwrite: bool) -> None:
 
 
 def command_run(args: argparse.Namespace) -> dict:
+    if bridge.is_canonical(args.spec):
+        spec = bridge._api()[1].load_spec(args.spec)
+        plan = bridge.explain_route(spec, engine=args.engine, allow_external=args.allow_external)
+        if plan["engine"] == "plot-matplotlib":
+            return bridge.render_plot_v1(spec, args.out)
+        if plan["engine"] == "prompt-only":
+            return bridge.compile_draft(spec, args.out,
+                model=args.model or "host-selected", provider=args.provider or "host")
+        return bridge.generate(args.spec, args.out, candidates=args.candidates,
+              allow_external=args.allow_external, timeout=args.timeout,
+              image_model=args.paperbanana_image_model)
     spec, validation = _load(args.spec)
     plan = route(spec, engine=args.engine, allow_external=args.allow_external)
     out = Path(args.out).expanduser().resolve()
@@ -139,6 +151,8 @@ def command_run(args: argparse.Namespace) -> dict:
 
 
 def command_audit(args: argparse.Namespace) -> dict:
+    if bridge.is_canonical(args.spec):
+        return bridge.audit_bundle(args.spec, args.artifact)
     spec, _ = _load(args.spec)
     report = audit_file(spec, args.spec, args.artifact)
     dest = Path(args.output).expanduser().resolve() if args.output else Path(args.artifact).expanduser().resolve().parent / f"audit-{Path(args.artifact).suffix.lstrip('.').lower()}.json"
@@ -148,6 +162,8 @@ def command_audit(args: argparse.Namespace) -> dict:
 
 
 def command_handoff(args: argparse.Namespace) -> dict:
+    if bridge.is_canonical(args.spec):
+        raise RFSValidationError("Canonical v1 native handoff requires a verified --bundle and image-bound design notes; use reconstruction-package")
     spec, _ = _load(args.spec)
     out = Path(args.out).expanduser().resolve()
     _ensure_new(out, ("handoff.md", "handoff.json"), args.overwrite)
@@ -155,6 +171,11 @@ def command_handoff(args: argparse.Namespace) -> dict:
 
 
 def command_prompt(args: argparse.Namespace) -> dict:
+    if bridge.is_canonical(args.spec):
+        if args.stage != "draft" or args.reference or args.change or args.region:
+            raise RFSValidationError("Canonical image edits require PaperBanana actual reference-image editing; no prompt-only substitution")
+        return bridge.compile_draft(bridge._api()[1].load_spec(args.spec), args.out,
+                                    model=args.model or "host-selected", provider=args.provider or "host")
     spec, _ = _load(args.spec)
     return save_prompt_pack(spec, args.spec, args.out, profile=args.profile,
                             stage=args.stage, reference=args.reference, change=args.change,
@@ -172,11 +193,20 @@ def add_model_options(parser: argparse.ArgumentParser) -> None:
 
 
 def command_compare(args: argparse.Namespace) -> dict:
+    if bridge.is_canonical(args.spec):
+        raise RFSValidationError("For canonical v1, compare actual PaperBanana candidates through its Critic. Generic image comparison is NOT a scientific verification")
     spec, _ = _load(args.spec)
     return save_comparison(spec, args.spec, args.images, args.out, overwrite=args.overwrite)
 
 
 def command_reconstruction_package(args: argparse.Namespace) -> dict:
+    if bridge.is_canonical(args.spec):
+        if not args.bundle:
+            raise RFSValidationError("Canonical reconstruction requires an actual --bundle and image-bound --design-notes")
+        return bridge.prepare_editable(args.spec, args.bundle, args.design_notes,
+                args.out, backend=args.backend, approved=args.approved)
+    if not args.reference:
+        raise RFSValidationError("Legacy reconstruction requires --reference")
     spec, _ = _load(args.spec)
     return create_reconstruction_package(spec, args.spec, reference=args.reference,
         notes=args.design_notes, out=args.out, backend=args.backend, approved=args.approved,
@@ -226,7 +256,8 @@ def main() -> int:
     cmp.add_argument("--overwrite", action="store_true")
     pkg = sub.add_parser("reconstruction-package", help="Package FigureSpec + actual visual reference + detailed written design notes")
     pkg.add_argument("--spec", required=True)
-    pkg.add_argument("--reference", required=True)
+    pkg.add_argument("--reference", help="Legacy reference; canonical v1 uses --bundle")
+    pkg.add_argument("--bundle", help="Verified canonical v1 PaperBanana candidate bundle")
     pkg.add_argument("--design-notes", required=True)
     pkg.add_argument("--backend", choices=["paper-fig", "sivia", "drawio"], default="paper-fig")
     pkg.add_argument("--approved", action="store_true", help="Only if user has approved this specific reference design")
@@ -252,14 +283,25 @@ def main() -> int:
             result = catalog(provider=args.provider, priority=args.priority,
                              stage=args.stage, registry=args.model_registry)
         elif args.command == "validate":
-            spec, report = load_and_validate(args.spec)
-            result = {"figure_id": spec.get("figure_id"), **report}
+            if bridge.is_canonical(args.spec):
+                spec = bridge._api()[1].load_spec(args.spec)
+                result = {"figure_id": spec["figure_id"], "valid": True,
+                          "schema_version": "1.0.0", "scientific_review": "PENDING"}
+            else:
+                spec, report = load_and_validate(args.spec)
+                result = {"figure_id": spec.get("figure_id"), **report}
             _emit(result)
             return 0 if report["valid"] else 2
         elif args.command == "route":
-            spec, report = _load(args.spec)
-            result = {"figure_id": spec["figure_id"], "plan": route(spec, args.engine, args.allow_external),
-                      "source_warnings": report["warnings"]}
+            if bridge.is_canonical(args.spec):
+                spec = bridge._api()[1].load_spec(args.spec)
+                result = {"figure_id": spec["figure_id"], "schema_version": "1.0.0",
+                          "plan": bridge.explain_route(spec, engine=args.engine, allow_external=args.allow_external),
+                          "scientific_review": "PENDING"}
+            else:
+                spec, report = _load(args.spec)
+                result = {"figure_id": spec["figure_id"], "plan": route(spec, args.engine, args.allow_external),
+                          "source_warnings": report["warnings"]}
         elif args.command == "run":
             result = command_run(args)
         elif args.command == "prompt":
@@ -269,7 +311,7 @@ def main() -> int:
         elif args.command == "reconstruction-package":
             result = command_reconstruction_package(args)
         elif args.command == "audit-package":
-            result = audit_reconstruction_package(args.package)
+            result = bridge.audit_handoff(args.package) if (Path(args.package) / "manifest.json").is_file() else audit_reconstruction_package(args.package)
         elif args.command == "handoff":
             result = command_handoff(args)
         elif args.command == "audit":
@@ -278,7 +320,7 @@ def main() -> int:
             raise RFSValidationError(f"Unknown command {args.command}")
         _emit(result)
         return 0
-    except RFSValidationError as exc:
+    except (RFSValidationError, ValueError) as exc:
         _emit({"status": "ERROR", "reason": str(exc)})
         return 2
     except (PermissionError, FileNotFoundError, OSError) as exc:

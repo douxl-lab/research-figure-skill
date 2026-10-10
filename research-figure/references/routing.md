@@ -1,3 +1,5 @@
+**Canonical routing:** new FigureSpec Exchange v1 diagrams use PaperBanana if explicitly authorized and its pinned protocol matches, otherwise compile a prompt without claiming an image exists; new v1 numerical plots use original data. Do not route a canonical complex diagram to SVG automatically. See [canonical-exchange](canonical-exchange.md). Below: legacy v0.1 routing detail.
+
 # FigureRouter: A/C 双主路线，B 按需使用
 
 ## Decision precedence

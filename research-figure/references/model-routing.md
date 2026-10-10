@@ -40,7 +40,7 @@ Model releases are **not** automatically downloaded or polled. Built-in recommen
 
 ## PaperBanana compatibility boundary
 
-PaperBanana is a separate executor with its own provider SDK, model router and model defaults. `--model` only selects RFS **direct image prompt compilation**. `--paperbanana-image-model <id>` is an **explicit upstream override** for `rfs.py run --engine paperbanana --allow-external` and may fail if the installed PaperBanana version/provider lacks support. RFS reports known retired preview IDs before issuing any paid calls; update or test the upstream environment before relying on it. Never claim that a new model works in PaperBanana without a real upstream integration test.
+PaperBanana is a separately installed five-agent executor. New canonical v1 requests use its `skill/exchange.py` with exact full FigureSpec; provider capability resolution occurs inside the engine, not in a duplicate RFS wrapper. The older `--paperbanana-image-model` controls only legacy 0.1.0 execution. Its provider SDK, model router and defaults stay within the executor. `--model` only selects RFS **direct image prompt compilation**. `--paperbanana-image-model <id>` is an **explicit upstream override** for `rfs.py run --engine paperbanana --allow-external` and may fail if the installed PaperBanana version/provider lacks support. RFS reports known retired preview IDs before issuing any paid calls; update or test the upstream environment before relying on it. Never claim that a new model works in PaperBanana without a real upstream integration test.
 
 ## Official references checked on October 9, 2026
 

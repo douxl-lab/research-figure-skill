@@ -14,9 +14,9 @@ from pathlib import Path, PurePosixPath
 
 ROOT_PUBLIC = frozenset({
     ".gitignore", ".gitattributes", "README.md", "SKILL.md", "LICENSE",
-    "THIRD_PARTY_NOTICES.md", "requirements-plot.txt",
+    "THIRD_PARTY_NOTICES.md", "requirements-plot.txt", "requirements-exchange.txt",
 })
-SOURCE_DIRS = frozenset({"assets", "agents", "references", "scripts", "tests"})
+SOURCE_DIRS = frozenset({"assets", "agents", "references", "scripts", "tests", "protocol"})
 PRIVATE_SEGMENTS = frozenset({
     ".git", ".venv", "venv", "env", "__pycache__", ".pytest_cache",
     ".vscode", ".idea", ".cursor", ".claude", ".codex", ".agents",
@@ -73,9 +73,11 @@ def public_path(path: str) -> bool:
         return False
     sub = parts[1:]
     if len(sub) == 1:
-        return sub[0] in {"SKILL.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "requirements-plot.txt"}
+        return sub[0] in {"SKILL.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "requirements-plot.txt", "requirements-exchange.txt"}
     if len(sub) < 2:
         return False
+    if sub[0] == "protocol" and path == "research-figure/protocol/LICENSE-APACHE-2.0":
+        return True
     if sub[0] == "assets" and pure.suffix.lower() == ".csv":
         return sub[-1].startswith("demo-synthetic-")
     return sub[0] in SOURCE_DIRS and pure.suffix.lower() in {".py", ".md", ".txt", ".json", ".yaml", ".yml", ".csv"}

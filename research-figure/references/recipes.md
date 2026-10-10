@@ -1,3 +1,7 @@
+# Recipe precedence
+
+For new figures, prefer canonical v1: `assets/figure-spec-v1-example.json` or `assets/figure-plot-v1-example.json`; see [canonical-exchange](canonical-exchange.md). The commands below are for the **legacy 0.1.0 format**, retained for existing user projects only.
+
 # Recipes — runnable commands and honest outputs
 
 Assume `RFS=/ABS/PATH/research-figure` and a real project folder `WORK=/ABS/PROJECT/figures/F01`. Run `python "$RFS/scripts/rfs.py" doctor` once; it reports installed (not necessarily executable) optional dependencies without exposing credentials.
