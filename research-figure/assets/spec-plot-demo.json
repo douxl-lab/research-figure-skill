@@ -1,0 +1,28 @@
+{
+  "schema_version": "0.1.0",
+  "figure_id": "DEMO-ABLATION-NOT-REAL",
+  "type": "quantitative",
+  "title": "Toy ablation scores — synthetic demo only",
+  "scientific_claim": "Synthetic examples solely to exercise code-based plotting. Not a research result.",
+  "evidence": [
+    {
+      "id": "synthetic-demo",
+      "kind": "data",
+      "status": "illustrative",
+      "path": "demo-synthetic-ablation.csv",
+      "note": "Created solely for software demonstration; not from any experiment."
+    }
+  ],
+  "plot": {
+    "kind": "bar",
+    "data_file": "demo-synthetic-ablation.csv",
+    "x": "Configuration",
+    "y": "ToyScore",
+    "series": "Group",
+    "x_label": "Configuration (synthetic)",
+    "y_label": "Toy score (arbitrary units)"
+  },
+  "style": {"theme": "academic-clean", "demo": true},
+  "target": {"width_px": 1400, "height_px": 850},
+  "delivery": {"editable": true, "formats": ["svg", "pdf", "png"]}
+}

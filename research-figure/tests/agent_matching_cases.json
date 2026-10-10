@@ -1,0 +1,251 @@
+{
+  "corpus_version": "0.3.0",
+  "notice": "Human-authored expectations only; not results of an LLM/agent invocation benchmark.",
+  "cases": [
+    {
+      "id": "P01",
+      "lang": "zh",
+      "prompt": "请根据我的多模态遥感模型代码绘制论文 Figure 1 的方法架构图，并检查箭头方向。",
+      "activate": true,
+      "expected_route": "creative-image-or-prompt"
+    },
+    {
+      "id": "P02",
+      "lang": "zh",
+      "prompt": "把这份模型方法描述设计成顶会论文的 Overview，想先探索几个不同的视觉方案。",
+      "activate": true,
+      "expected_route": "creative-image-or-prompt"
+    },
+    {
+      "id": "P03",
+      "lang": "zh",
+      "prompt": "用 CSV 里的真实消融结果生成可复现的论文分组柱状图和 PDF。",
+      "activate": true,
+      "expected_route": "plot-matplotlib"
+    },
+    {
+      "id": "P04",
+      "lang": "zh",
+      "prompt": "请把已认可的论文架构图完整还原成文字和箭头都可编辑的 PPTX，不要重新设计。",
+      "activate": true,
+      "expected_route": "handoff"
+    },
+    {
+      "id": "P05",
+      "lang": "zh",
+      "prompt": "将论文中的光学与 SAR 原始样例图拼成结果对比面板，图注可编辑、不要生成伪造影像。",
+      "activate": true,
+      "expected_route": "real-image-panel"
+    },
+    {
+      "id": "P06",
+      "lang": "zh",
+      "prompt": "检查这张论文方法图的模块连接与代码是否一致，然后审查可编辑性。",
+      "activate": true,
+      "expected_route": "audit"
+    },
+    {
+      "id": "P07",
+      "lang": "zh",
+      "prompt": "统一我们论文五张实验和方法图的学术配色、字体及图注风格。",
+      "activate": true,
+      "expected_route": "multi-figure-style"
+    },
+    {
+      "id": "P08",
+      "lang": "en",
+      "prompt": "Generate a paper-ready ablation plot from my actual benchmark CSV; keep the code and source provenance.",
+      "activate": true,
+      "expected_route": "plot-matplotlib"
+    },
+    {
+      "id": "P09",
+      "lang": "en",
+      "prompt": "Create an editable scientific neural-network architecture figure from the model code.",
+      "activate": true,
+      "expected_route": "creative-image-then-optional-reconstruction"
+    },
+    {
+      "id": "P10",
+      "lang": "en",
+      "prompt": "Audit this published-figure PPTX for native text, editable connectors, and clipping at column width.",
+      "activate": true,
+      "expected_route": "audit"
+    },
+    {
+      "id": "P11",
+      "lang": "en",
+      "prompt": "Use my manuscript's method section to propose alternative conference paper figure designs with PaperBanana.",
+      "activate": true,
+      "expected_route": "creative-image-or-prompt"
+    },
+    {
+      "id": "P12",
+      "lang": "zh",
+      "prompt": "给多标签遥感文章做一张精确方法流程图，输出 SVG 并留下节点、连线对应来源。",
+      "activate": true,
+      "expected_route": "native-svg"
+    },
+    {
+      "id": "N01",
+      "lang": "zh",
+      "prompt": "用通俗的话解释一下多模态遥感中的交叉注意力机制。",
+      "activate": false,
+      "expected_route": "none"
+    },
+    {
+      "id": "N02",
+      "lang": "zh",
+      "prompt": "帮我优化深度学习模型的学习率和批大小。",
+      "activate": false,
+      "expected_route": "none"
+    },
+    {
+      "id": "N03",
+      "lang": "zh",
+      "prompt": "帮我写一篇遥感多标签分类论文的 Related Work。",
+      "activate": false,
+      "expected_route": "none"
+    },
+    {
+      "id": "N04",
+      "lang": "zh",
+      "prompt": "做一套关于公司季度业绩的 PowerPoint 演示文稿。",
+      "activate": false,
+      "expected_route": "none"
+    },
+    {
+      "id": "N05",
+      "lang": "zh",
+      "prompt": "画一幅彩色水彩风格的风景插画。",
+      "activate": false,
+      "expected_route": "none"
+    },
+    {
+      "id": "N06",
+      "lang": "zh",
+      "prompt": "请看一下上传的图，给我解释其中的网络结构是什么意思。",
+      "activate": false,
+      "expected_route": "none"
+    },
+    {
+      "id": "N07",
+      "lang": "zh",
+      "prompt": "帮我做 Excel 仪表盘展示销售数据。",
+      "activate": false,
+      "expected_route": "none"
+    },
+    {
+      "id": "N08",
+      "lang": "en",
+      "prompt": "Summarize this PDF scientific paper; I do not need any figures.",
+      "activate": false,
+      "expected_route": "none"
+    },
+    {
+      "id": "N09",
+      "lang": "en",
+      "prompt": "Create a colorful social media banner for my lab recruitment drive.",
+      "activate": false,
+      "expected_route": "none"
+    },
+    {
+      "id": "N10",
+      "lang": "zh",
+      "prompt": "帮我研究 PaperBanana 和 Sivia 哪个架构更合理，不用绘图。",
+      "activate": false,
+      "expected_route": "none"
+    },
+    {
+      "id": "N11",
+      "lang": "zh",
+      "prompt": "直接使用 $paper-fig 把已有截图重建成一张 PPTX 页面。",
+      "activate": false,
+      "expected_route": "explicit-other-skill"
+    },
+    {
+      "id": "N12",
+      "lang": "en",
+      "prompt": "Plot simple business revenue trends for my dashboard (not a publication figure).",
+      "activate": false,
+      "expected_route": "none"
+    },
+    {
+      "id": "N13",
+      "lang": "zh",
+      "prompt": "帮我把一篇学术文章从英文翻译成中文。",
+      "activate": false,
+      "expected_route": "none"
+    },
+    {
+      "id": "N14",
+      "lang": "zh",
+      "prompt": "帮我生成一个关于遥感技术科普的展板海报。",
+      "activate": false,
+      "expected_route": "none"
+    },
+    {
+      "id": "N15",
+      "lang": "en",
+      "prompt": "Write a Matplotlib unit test for a function that uses axes.plot.",
+      "activate": false,
+      "expected_route": "none"
+    },
+    {
+      "id": "P13",
+      "lang": "zh",
+      "prompt": "请为科研模型的生成式 Overview 专门编译 Gemini 版 prompt，确保箭头和文字可核验。",
+      "activate": true,
+      "expected_route": "prompt-model-adapter"
+    },
+    {
+      "id": "P14",
+      "lang": "en",
+      "prompt": "Compare two generated method diagram candidates for scientific correctness, connector occlusions and readability.",
+      "activate": true,
+      "expected_route": "candidate-compare"
+    },
+    {
+      "id": "P15",
+      "lang": "zh",
+      "prompt": "这张模型架构图整体很好，只把 Router 右侧交叉箭头局部修好，其他保持不动。",
+      "activate": true,
+      "expected_route": "scoped-image-refine"
+    },
+    {
+      "id": "P16",
+      "lang": "zh",
+      "prompt": "依据我选定的科研图 PNG、原始 FigureSpec 和详细布局文字说明制作可编辑论文 PPTX。",
+      "activate": true,
+      "expected_route": "three-source-reconstruction"
+    },
+    {
+      "id": "P17",
+      "lang": "en",
+      "prompt": "Build a scientific architecture figure design brief and GPT Image prompt from these verified modules and exact arrows.",
+      "activate": true,
+      "expected_route": "prompt-model-adapter"
+    },
+    {
+      "id": "N16",
+      "lang": "zh",
+      "prompt": "讲解一下 Gemini 和 GPT Image 的提示词工程基础理论，不用生成科研图。",
+      "activate": false,
+      "expected_route": "none"
+    },
+    {
+      "id": "N17",
+      "lang": "en",
+      "prompt": "Make a text-only summary of an academic plotting guide; no illustration needed.",
+      "activate": false,
+      "expected_route": "none"
+    },
+    {
+      "id": "N18",
+      "lang": "zh",
+      "prompt": "只使用 $paper-fig 制作用户手册截图页面，不需要 RFS 调度。",
+      "activate": false,
+      "expected_route": "explicit-other-skill"
+    }
+  ]
+}

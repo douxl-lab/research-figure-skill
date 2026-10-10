@@ -1,0 +1,2 @@
+# Optional; only for quantitative plotting (diagram SVG, routing, and audit use stdlib).
+matplotlib>=3.8,<4

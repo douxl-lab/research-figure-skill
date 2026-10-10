@@ -1,0 +1,41 @@
+{
+  "generic": {
+    "description": "Portable image-generation prompt; no provider-specific syntax assumed.",
+    "generation_guidance": [
+      "Generate one complete flat academic design preview at the specified aspect ratio.",
+      "Favor a clear reader path and a small number of meaningful visual groups over decorative panels.",
+      "Show all mandatory scientific nodes and edges; if the composition is too dense, use a grouped overview with clearly indicated local expansion.",
+      "Text is critical: reproduce exact labels; do not improvise scientific content."
+    ],
+    "refinement_guidance": [
+      "Apply only the requested local correction; retain composition and unrelated regions.",
+      "Do not regenerate new scientific nodes, formulas, axes, or empirical measurements."
+    ]
+  },
+  "gemini": {
+    "description": "Gemini-oriented structured brief. Heuristic adapter, not a certified model capability claim.",
+    "generation_guidance": [
+      "Use the numbered scientific inventory, explicit reading path, and per-edge directives as binding design constraints.",
+      "Deliver a single wide, legible publication-oriented figure rather than multiple concept sketches on one canvas.",
+      "Use consistent visual vocabulary for modality encoding, label interactions, routing, and fusion; preserve the named objects exactly.",
+      "Minimize crossings by grouping related signals near their destinations; do not invent shortcut arrows."
+    ],
+    "refinement_guidance": [
+      "Treat the supplied image as the composition to edit and the scientific contract as the source of truth.",
+      "Make the smallest visible local change that resolves the stated defect."
+    ]
+  },
+  "gpt-image": {
+    "description": "GPT Image-oriented explicit visual brief. Heuristic adapter, not a certified model capability claim.",
+    "generation_guidance": [
+      "First establish the figure's dominant visual spine and region hierarchy, then render only the named semantic objects.",
+      "Enforce disciplined, print-legible academic typography and preserve label spelling and capitalization as literal text.",
+      "Make novelty and key data interactions visible through composition and contrast rather than excessive glow, icons, or shadows.",
+      "Prefer clean ports and short local connector routes; avoid crossing labels or unrelated modules."
+    ],
+    "refinement_guidance": [
+      "Preserve all unaffected shapes, labels, arrow routes, colors, and relative positions in the reference.",
+      "Correct only the given region/defect; do not make global stylistic reinterpretations."
+    ]
+  }
+}

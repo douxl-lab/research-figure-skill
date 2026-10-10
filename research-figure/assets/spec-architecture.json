@@ -1,0 +1,110 @@
+{
+  "schema_version": "0.1.0",
+  "figure_id": "F01-MRLQ-EF-DRAFT",
+  "type": "architecture",
+  "title": "MRLQ-EF conceptual pipeline (unverified draft)",
+  "scientific_claim": "Illustrative high-level research proposal: multimodal representation, label-query interaction, label-wise routing, and evidential fusion. Exact topology requires validation against real code.",
+  "evidence": [
+    {
+      "id": "proposal-not-verified",
+      "kind": "hypothesis",
+      "status": "pending",
+      "note": "Based on a preliminary proposed sequence. NOT verified against implemented code."
+    }
+  ],
+  "diagram": {
+    "nodes": [
+      {
+        "id": "encoders",
+        "label": "Multimodal\nEncoders",
+        "evidence_refs": [
+          "proposal-not-verified"
+        ]
+      },
+      {
+        "id": "labelquery",
+        "label": "Label Queries +\nCross-Attention",
+        "evidence_refs": [
+          "proposal-not-verified"
+        ]
+      },
+      {
+        "id": "router",
+        "label": "Label-wise\nRouter",
+        "evidence_refs": [
+          "proposal-not-verified"
+        ],
+        "emphasis": true
+      },
+      {
+        "id": "fusion",
+        "label": "Evidential Head\n& Fusion",
+        "evidence_refs": [
+          "proposal-not-verified"
+        ],
+        "emphasis": true
+      }
+    ],
+    "edges": [
+      {
+        "source": "encoders",
+        "target": "labelquery",
+        "evidence_refs": [
+          "proposal-not-verified"
+        ]
+      },
+      {
+        "source": "labelquery",
+        "target": "router",
+        "evidence_refs": [
+          "proposal-not-verified"
+        ]
+      },
+      {
+        "source": "router",
+        "target": "fusion",
+        "evidence_refs": [
+          "proposal-not-verified"
+        ]
+      }
+    ]
+  },
+  "style": {
+    "theme": "remote-sensing",
+    "demo": false
+  },
+  "target": {
+    "width_px": 1560,
+    "height_px": 760
+  },
+  "delivery": {
+    "editable": true,
+    "formats": [
+      "svg"
+    ]
+  },
+  "generation": {
+    "intent": "creative",
+    "archetype": "overview"
+  },
+  "design": {
+    "reading_path": "left_to_right",
+    "visual_priority": "Emphasize the label-wise routing and evidential fusion as tentative method focus; topology unverified",
+    "layout_notes": [
+      "Use one left-to-right scientific narrative rather than an even-weight dashboard card grid.",
+      "Group the early encoding and label-query stages with clear separation; give routing and evidential fusion more visual weight."
+    ],
+    "text_notes": [
+      "Retain official method terminology from the FigureSpec; do not invent formulas or expand abbreviations."
+    ],
+    "connector_notes": [
+      "Route main semantic arrows along a single consistent spine; localize any detailed branches."
+    ],
+    "asset_notes": [
+      "Any decorative or illustrative motifs must be independent from editable semantic module/arrow layers."
+    ],
+    "avoid": [
+      "Do not suggest measured accuracy or experimentally verified uncertainty effects."
+    ]
+  }
+}

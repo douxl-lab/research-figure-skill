@@ -1,0 +1,14 @@
+{
+  "style_id": "academic-clean-v1",
+  "background": "#FFFFFF",
+  "text": "#1F2937",
+  "secondary_text": "#556274",
+  "stroke": "#687589",
+  "node_fill": "#EEF4FA",
+  "node_border": "#49749A",
+  "accent_fill": "#E4F3EC",
+  "accent_border": "#278062",
+  "highlight": "#D55E00",
+  "palette": ["#0072B2", "#D55E00", "#009E73", "#CC79A7", "#E69F00", "#56B4E9", "#4C566A"],
+  "font_family": "DejaVu Sans, Arial, sans-serif"
+}

@@ -1,0 +1,22 @@
+{
+  "style_id": "remote-sensing-v1",
+  "background": "#FFFFFF",
+  "text": "#173247",
+  "secondary_text": "#51677B",
+  "stroke": "#647F90",
+  "node_fill": "#E8F2FA",
+  "node_border": "#39799C",
+  "accent_fill": "#E8F4EE",
+  "accent_border": "#24846D",
+  "highlight": "#B85A20",
+  "palette": [
+    "#337BA6",
+    "#C26B2A",
+    "#288A73",
+    "#8677B7",
+    "#BC4370",
+    "#6F8596",
+    "#E8A45C"
+  ],
+  "font_family": "DejaVu Sans, Arial, sans-serif"
+}

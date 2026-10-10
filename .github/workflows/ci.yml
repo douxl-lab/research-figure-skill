@@ -1,0 +1,34 @@
+name: RFS skill quality and repository privacy
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10', '3.12', '3.13']
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Validate Agent Skill package
+        run: python research-figure/scripts/check_skill.py
+      - name: Scan tracked files for secrets and private developer state
+        run: python research-figure/scripts/check_repository.py --root . --tracked
+      - name: Run offline unit/regression tests
+        run: python -m unittest discover -s research-figure/tests -q
+      - name: CLI startup and doctor
+        run: |
+          python research-figure/scripts/rfs.py --help > /dev/null
+          python research-figure/scripts/rfs.py doctor > /dev/null
+          python -m compileall -q research-figure/scripts

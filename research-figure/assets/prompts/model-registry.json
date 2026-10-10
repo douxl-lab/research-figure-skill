@@ -1,0 +1,124 @@
+{
+  "schema": "rfs-model-registry/1",
+  "verified_at": "2026-10-09",
+  "purpose": "Curated public API capabilities and model-specific academic figure prompt heuristics; not a live entitlement or quality guarantee.",
+  "sources": [
+    "https://developers.openai.com/api/docs/guides/image-generation",
+    "https://developers.openai.com/api/reference/resources/images/methods/generate",
+    "https://ai.google.dev/gemini-api/docs/models/gemini-nano-banana-2.1",
+    "https://ai.google.dev/gemini-api/docs/models/gemini-3-pro-image",
+    "https://ai.google.dev/gemini-api/docs/image-generation",
+    "https://ai.google.dev/gemini-api/docs/deprecations"
+  ],
+  "default_candidates": {
+    "speed": {"any": "gpt-image-2.5-flare", "openai": "gpt-image-2.5-flare", "gemini": "gemini-nano-banana-2.1"},
+    "balanced": {"any": "gemini-nano-banana-2.1", "openai": "gpt-image-2.5-flare", "gemini": "gemini-nano-banana-2.1"},
+    "quality": {"any": "gemini-3-pro-image", "openai": "gpt-image-2.5-sunburst", "gemini": "gemini-3-pro-image"},
+    "precise_edit": {"any": "gpt-image-2.5-sunburst", "openai": "gpt-image-2.5-sunburst", "gemini": "gemini-3-pro-image"}
+  },
+  "models": [
+    {
+      "id": "gpt-image-2.5-flare",
+      "provider": "openai",
+      "prompt_profile": "gpt-image",
+      "lifecycle": "active",
+      "best_for": ["fast_drafts", "candidate_diversity", "high_volume"],
+      "stages": ["draft", "refine"],
+      "interface": "Images API /v1/images/generations or /v1/images/edits; also supported through image tool in Responses API",
+      "parameters_to_check": {"quality": ["low", "medium", "high", "xhigh", "max"], "size": "flexible; validate pixel constraints with current Images API docs", "output_format": ["png", "jpeg", "webp"]},
+      "draft_guidance": [
+        "Use decisive topological grouping and a clear primary reading spine to obtain diverse candidate compositions quickly.",
+        "Keep diagram labels literal and short; distinguish main mechanism from secondary annotations by whitespace and line weight."
+      ],
+      "refinement_guidance": [
+        "Attach the actual approved reference image and specify one observable region-level change.",
+        "Preserve the approved visual identity, relative placement, and all other scientific links."
+      ],
+      "notes": "Recommended for fast prototype generation; confirm actual text/edge fidelity in returned image."
+    },
+    {
+      "id": "gpt-image-2.5-sunburst",
+      "provider": "openai",
+      "prompt_profile": "gpt-image",
+      "lifecycle": "active",
+      "best_for": ["premium_figure_design", "precise_edits", "hard_layouts"],
+      "stages": ["draft", "refine"],
+      "interface": "Images API /v1/images/generations or /v1/images/edits; also supported through image tool in Responses API",
+      "parameters_to_check": {"quality": ["low", "medium", "high", "xhigh", "max"], "size": "flexible; validate pixel constraints with current Images API docs", "output_format": ["png", "jpeg", "webp"]},
+      "draft_guidance": [
+        "Prioritize precise visual hierarchy, diagrammatic readability at print width, accurate labels, and controlled connector routing over extra illustration.",
+        "Respect the exact node/edge ledger. Make complex regions visually legible through disciplined grouping rather than detailed spaghetti connections."
+      ],
+      "refinement_guidance": [
+        "Edit only the named region and stated defect, preserving visually approved surrounding elements.",
+        "Check every outgoing connector of a changed region for topology drift."
+      ],
+      "notes": "Use when exact local editing and high-fidelity visual polish justify higher latency; does not guarantee editable shapes."
+    },
+    {
+      "id": "gpt-image-2",
+      "provider": "openai",
+      "prompt_profile": "gpt-image",
+      "lifecycle": "active_older",
+      "best_for": ["validated_legacy_integration"],
+      "stages": ["draft", "refine"],
+      "interface": "Images API /v1/images/generations or /v1/images/edits",
+      "parameters_to_check": {"quality": ["low", "medium", "high"], "input_fidelity": "omit", "size": "flexible, within 3840px long edge and published constraints"},
+      "draft_guidance": ["Keep structured blocks and topological constraints explicit; follow exact text ledger."],
+      "refinement_guidance": ["Attach the actual reference and preserve unrelated modules in an edit."],
+      "notes": "Compatibility option; prefer GPT Image 2.5 for new integrations."
+    },
+    {
+      "id": "gemini-nano-banana-2.1",
+      "provider": "gemini",
+      "prompt_profile": "gemini",
+      "lifecycle": "active",
+      "best_for": ["balanced_drafts", "academic_infographics", "multi_reference_editing"],
+      "stages": ["draft", "refine"],
+      "interface": "Gemini image generation / Interactions API, verify SDK and API version at invocation",
+      "parameters_to_check": {"image_size": ["1K", "2K", "4K"], "thinking_level": ["minimal", "medium", "high"], "reference_images": "up to 14, subject to object and character limits"},
+      "draft_guidance": [
+        "Use exact named modules, numbered directional edges, region-by-region position directives, and explicit negative constraints.",
+        "Prefer a single publication figure with strong spatial grouping. For high-density scientific labels request 2K/4K output when available."
+      ],
+      "refinement_guidance": [
+        "Continue from the attached reference image, preserving layout and figure terminology; correct only specified module and connector errors.",
+        "Use available high thinking setting for difficult corrections only when cost and latency allow."
+      ],
+      "notes": "Released October 2026; improves prompt fidelity and text/infographic layout. Refer to provider docs for exact SDK field names."
+    },
+    {
+      "id": "gemini-3-pro-image",
+      "provider": "gemini",
+      "prompt_profile": "gemini",
+      "lifecycle": "active",
+      "best_for": ["professional_design", "complex_visual_grammar", "dense_scientific_diagrams"],
+      "stages": ["draft", "refine"],
+      "interface": "Gemini image generation API",
+      "parameters_to_check": {"image_size": ["1K", "2K", "4K"], "image_references": "supported, check model-specific limits"},
+      "draft_guidance": [
+        "Treat scientific relations as binding constraints and plan the whole figure composition before rendering.",
+        "Emphasize scientific novelty using region mass, color semantics and legible typography, not gratuitous iconography."
+      ],
+      "refinement_guidance": [
+        "Request high-fidelity local corrections using the approved visual and full exact scientific ledger.",
+        "Preserve existing reading hierarchy and stylistic consistency between revisions."
+      ],
+      "notes": "Professional complex image-layout option. Verify generated diagram against FigureSpec."
+    },
+    {
+      "id": "gemini-3.1-flash-image",
+      "provider": "gemini",
+      "prompt_profile": "gemini",
+      "lifecycle": "active_superseded",
+      "best_for": ["validated_legacy_integration"],
+      "stages": ["draft", "refine"],
+      "interface": "Gemini image generation API",
+      "parameters_to_check": {"image_size": ["0.5K", "1K", "2K", "4K"]},
+      "draft_guidance": ["Keep exact labels and direction-correct arrows visible at publication width."],
+      "refinement_guidance": ["Preserve reference fidelity outside the region being repaired."],
+      "notes": "Still documented, but Google recommends Gemini Nano Banana 2.1 as successor."
+    }
+  ],
+  "offline_disclaimer": "Entries and preferred models are snapshots, not live service discovery or evidence that a user's API account has access. Re-check official provider docs before live calls. Edit or replace this registry to add future models without rewriting Prompt Compiler."
+}
