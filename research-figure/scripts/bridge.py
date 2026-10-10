@@ -97,17 +97,21 @@ def explain_route(spec: dict, *, engine="auto", allow_external=False) -> dict:
             "requires_external": bool(engine == "paperbanana" or engine == "auto" and allow_external)}
 
 
-def compile_draft(spec: dict, out: str | Path, *, model: str = "host-selected", provider: str = "host", candidate_id: str = "0") -> dict:
+def compile_draft(spec: dict, out: str | Path, *, model: str = "auto", provider: str = "any", candidate_id: str = "0",
+                  priority: str = "balanced", registry: str | Path | None = None) -> dict:
     contract, interop, compiler = _api()
     spec = contract.validate_figure_spec(spec)
     if spec["kind"] != "diagram":
         raise ValueError("Draft image prompts require a canonical diagram")
+    from model_catalog import choose_model
+    selection = choose_model(model=model, provider=provider, priority=priority, stage="draft", registry=registry)
     instructions = (f"Layout: {spec['design']['layout']}\nComposition: {spec['design']['composition']}\n"
                     f"Typography: {spec['design']['typography']}\n"
                     "All scientific facts must match the immutable FigureSpec. This is design intent, not observed image QA.")
-    capabilities = {"provider": provider, "model": model, "supports_system_prompt": False,
+    capabilities = {"provider": selection["provider"], "model": selection["id"], "supports_system_prompt": False,
                     "supports_reference_image": False, "supports_editing": False,
-                    "prompt_notes": ["Preserve exact evidence-bound scientific topology; do not invent experimental values."]}
+                    "prompt_notes": ["Preserve exact evidence-bound scientific topology; do not invent experimental values.",
+                                     *selection["draft_guidance"]]}
     result = compiler.compile_prompt(spec, instructions, capabilities, candidate_id=candidate_id, stage="design")
     target = _new_dir(out)
     payload = {"figure-spec.json": _json(spec), "prompt.txt": result.prompt.encode("utf-8"),
@@ -116,7 +120,9 @@ def compile_draft(spec: dict, out: str | Path, *, model: str = "host-selected", 
         (target / name).write_bytes(raw)
     manifest = {"format": "rfs-canonical-draft/1.0", "status": "PROMPT_READY_NOT_RENDERED",
                 "figure_id": spec["figure_id"], "scientific_fingerprint": contract.scientific_fingerprint(spec),
-                "model": model, "provider": provider,
+                "model": selection["id"], "provider": selection["provider"],
+                "model_registry_sha256": selection["registry_sha256"],
+                "model_access_verified": False,
                 "files_sha256": {name: _sha(raw) for name, raw in payload.items()}}
     (target / "manifest.json").write_bytes(_json(manifest))
     return {"status": manifest["status"], "prompt": str(target / "prompt.txt"),
@@ -231,9 +237,25 @@ def render_plot_v1(spec: dict, output: str | Path) -> dict:
     finally:
         plt.close(fig)
     (target / "figure-spec.json").write_bytes(_json(spec))
+    # This is fixed RFS-owned source code, not model-generated Python. The output
+    # contains its complete original dataset and a repeatable local invocation.
+    script = '''#!/usr/bin/env python3
+"""Reproduce the associated science-locked plot with the installed RFS v0.4 Skill."""
+import json, os, sys
+from pathlib import Path
+skill = os.environ.get('RFS_SKILL_ROOT')
+if not skill:
+    raise SystemExit('Set RFS_SKILL_ROOT to your installed research-figure Skill directory')
+sys.path.insert(0, str(Path(skill).resolve() / 'scripts'))
+from bridge import render_plot_v1
+spec = json.loads(Path(__file__).with_name('figure-spec.json').read_text(encoding='utf-8'))
+render_plot_v1(spec, sys.argv[1] if len(sys.argv)>1 else str(Path(__file__).parent / 'reproduced'))
+'''
+    (target / "plot-reproduce.py").write_text(script, encoding="utf-8")
     receipt = {"format": "rfs-quantitative/1.0", "status": "DATA_PLOTTED_SCIENCE_REVIEW_PENDING",
                "source_dataset_sha256": dataset["sha256"], "scientific_fingerprint": contract.scientific_fingerprint(spec),
-               "row_count": len(rows), "files_sha256": {name: _sha((target / name).read_bytes()) for name in (*paths, "figure-spec.json")}}
+               "row_count": len(rows), "rfs_version": "0.4.0", "matplotlib_version": matplotlib.__version__,
+               "files_sha256": {name: _sha((target / name).read_bytes()) for name in (*paths, "figure-spec.json", "plot-reproduce.py")}}
     (target / "manifest.json").write_bytes(_json(receipt))
     return {"status": receipt["status"], "artifacts": [str(target / n) for n in paths], "manifest": str(target / "manifest.json")}
 

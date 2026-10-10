@@ -88,7 +88,8 @@ def command_run(args: argparse.Namespace) -> dict:
             return bridge.render_plot_v1(spec, args.out)
         if plan["engine"] == "prompt-only":
             return bridge.compile_draft(spec, args.out,
-                model=args.model or "host-selected", provider=args.provider or "host")
+                model=args.model or "auto", provider=args.provider or "any",
+                priority=args.priority, registry=args.model_registry)
         return bridge.generate(args.spec, args.out, candidates=args.candidates,
               allow_external=args.allow_external, timeout=args.timeout,
               image_model=args.paperbanana_image_model)
@@ -175,7 +176,8 @@ def command_prompt(args: argparse.Namespace) -> dict:
         if args.stage != "draft" or args.reference or args.change or args.region:
             raise RFSValidationError("Canonical image edits require PaperBanana actual reference-image editing; no prompt-only substitution")
         return bridge.compile_draft(bridge._api()[1].load_spec(args.spec), args.out,
-                                    model=args.model or "host-selected", provider=args.provider or "host")
+                                    model=args.model or "auto", provider=args.provider or "any",
+                priority=args.priority, registry=args.model_registry)
     spec, _ = _load(args.spec)
     return save_prompt_pack(spec, args.spec, args.out, profile=args.profile,
                             stage=args.stage, reference=args.reference, change=args.change,

@@ -9,7 +9,7 @@
 | 路线 | 默认执行 | 实际产物 |
 |---|---|---|
 | **A · 生成式优先** | 可用时调用 PaperBanana；否则先产出专业 Prompt | 候选图、实际 Prompt、设计说明、完整科学规格及哈希；无模型授权时只是 Prompt |
-| **C · 数据优先** | Matplotlib 使用 FigureSpec 中的真实原始数据 | SVG、PDF、PNG + 原始完整数据/科学规格 + 哈希清单 |
+| **C · 数据优先** | Matplotlib 使用 FigureSpec 中的真实原始数据 | SVG、PDF、PNG + 原始完整数据/科学规格 + `plot-reproduce.py` + 哈希清单 |
 | **可编辑重建** | 经审核的候选图 + 原始 FigureSpec + 观察图片后的文字指导 | 严格验收的重建任务包；真正的 PPTX/draw.io 需要另装可编辑后端 |
 | **B · 直接原生** | 仅明确指定的简单结构图 | 旧版精确 SVG，不作为复杂方法图的美学默认解 |
 

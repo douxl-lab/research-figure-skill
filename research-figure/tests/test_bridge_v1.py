@@ -93,6 +93,7 @@ class CanonicalBridgeTests(unittest.TestCase):
         self.assertEqual(receipt["row_count"], 2)
         self.assertEqual(json.loads((self.base / "plot" / "figure-spec.json").read_text())["datasets"][0]["rows"], spec["datasets"][0]["rows"])
         self.assertTrue((self.base / "plot" / "figure.svg").exists())
+        self.assertTrue((self.base / "plot" / "plot-reproduce.py").is_file())
 
     def test_reject_invented_statistical_aggregation(self):
         spec = fixture("plot")
