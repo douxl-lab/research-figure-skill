@@ -13,6 +13,8 @@ metadata:
 
 **Core policy:** Route A (generative design) for complex method figures; Route C (real-data code plotting) for quantitative figures. Route B (direct native diagrams) is optional for simple exact shapes, **not** the aesthetic fallback for complex architecture diagrams. Image generation ≠ native editability. Never fabricate experiment measurements.
 
+**Journal figure default:** One independent scientific question per image. Do not put a large in-image title/subtitle, numbered 1–6 stage headings, decorative banners or (a)/(b)/(c) tags on standalone images. Use three separately captioned figures when the full method and important mechanisms each need detail. Preserve panel lettering when the user or journal actually requires one multipart figure. Read [journal mechanism style](references/journal-mechanism-style.md) before designing; verify multi-label uncertainty equations against the actual method.
+
 ## Activation and responsibility
 
 Use this skill when the *deliverable* is a research figure, its visual-direction prompt, its figure-source editing, or a figure-quality audit. A discussion about ML architecture or prompt engineering without producing a scientific figure needs no RFS activation. Respect explicitly requested specialist skills when the user wants only their specific operation. For scientific image panels, preserve real empirical pixels; do not use generative art as observations.

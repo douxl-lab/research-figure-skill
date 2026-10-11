@@ -2,6 +2,10 @@
 
 **科研论文图件调度 Skill（Agent Skills）**。复杂方法图用生成式设计，实验图以真实数据与可复现代码绘制；有可编辑需求时，结合**生成图片、可信 FigureSpec、观察图片后的详细文字说明**，交给实际 PPTX/draw.io 后端重建。
 
+## 科研图默认排版规范
+
+新增 [真实论文与期刊规范调研的机制图风格](research-figure/references/journal-mechanism-style.md)：独立图默认**不在图内加大标题、阶段 1–6 或 A/B/C 标签**；总架构、Router 内部机制、Evidential Fusion 内部机制应在有足够内容时分别成为三张可独立引用的图。避免海报化信息卡片和无效空白，让每个科学术语、算子、公式及连线都有来源。期刊明确要求组合子图时仍遵守其 panel 标记规则。该风格是默认偏好，不会覆盖具体论文的科学证据或投稿要求。
+
 ## 统一协议与角色
 
 从 v0.4.0 起，**RFS 与 [douxl-lab/PaperBanana](https://github.com/douxl-lab/PaperBanana) 使用相同的 FigureSpec Exchange v1 (`schema_version: "1.0.0"`)**。科学模块、标签、公式、连线、来源、数据及锁定约束由同一协议验证。RFS 是调度与验收方，PaperBanana 保留 Retriever → Planner → Stylist → Visualizer → Critic 多智能体设计引擎；不重复设计/评审循环。

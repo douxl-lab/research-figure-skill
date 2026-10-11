@@ -2,6 +2,8 @@
 
 **Purpose:** image-generation models are visual design engines; their raster outputs must never be mistaken for editable scientific objects or new experimental evidence.
 
+**Default publication framing:** A standalone mechanism figure is captionless/titleless within the image and has no numbered stage boxes, (a)/(b)/(c), decorative contribution ribbons or bottom timeline. Arrange densely but with readable scientific operations and clear arrow corridors. Plan a distinct overall figure and distinct deep-mechanism figures instead of auto-combining them. The manuscript carries their individual captions. For a truly multipart image, follow required venue letter labels. Read [journal mechanism style](journal-mechanism-style.md) before compiling. Never invent formulas or reuse multi-class Dirichlet equations for multi-label outputs without mathematical confirmation.
+
 ## The six-layer compiler contract
 
 `rfs.py prompt` compiles the FigureSpec into one *model-adapted* prompt, with these mandatory parts:
