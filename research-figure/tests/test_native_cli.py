@@ -12,7 +12,7 @@ from pathlib import Path
 from PIL import Image
 
 def attr(value):
-    return html.attr(str(value), quote=True)
+    return html.escape(str(value), quote=True)
 
 
 ROOT = Path(__file__).resolve().parents[1]

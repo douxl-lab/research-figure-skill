@@ -100,10 +100,14 @@ def _native_pptx(path: Path) -> dict:
         nv = connection.find("./" + P + "nvCxnSpPr/" + P + "cNvCxnSpPr")
         first = nv.find(A + "stCxn") if nv is not None else None
         last = nv.find(A + "endCxn") if nv is not None else None
-        arrow = any(item.get("type", "none") != "none" for item in connection.iter(A + "headEnd"))
+        # DrawingML a:headEnd is the BEGINNING of the path; a:tailEnd is its END.
+        # Checking only for an arrowhead would accept reversed scientific flow.
+        arrow = any(item.get("type", "none") != "none" for item in connection.iter(A + "tailEnd"))
+        reverse_arrow = any(item.get("type", "none") != "none" for item in connection.iter(A + "headEnd"))
         name = cnv.get("name", "") if cnv is not None else ""
         record = {"name": name, "start": first.get("id") if first is not None else None,
-                  "end": last.get("id") if last is not None else None, "arrow": arrow}
+                  "end": last.get("id") if last is not None else None,
+                  "arrow": arrow, "reverse_arrow": reverse_arrow}
         connectors.append(record)
         if name.startswith("rfs-edge:"):
             edges[name[len("rfs-edge:"):]] = record
@@ -163,7 +167,10 @@ def _native_drawio(path: Path) -> dict:
         if cell.get("edge") == "1":
             end_arrow = re.search(r"(?:^|;)endArrow=([^;]+)", cell.get("style", ""))
             arrow = end_arrow is not None and end_arrow.group(1) not in {"none", "0"}
-            record = {"name": cid, "start": cell.get("source"), "end": cell.get("target"), "arrow": arrow}
+            start_arrow = re.search(r"(?:^|;)startArrow=([^;]+)", cell.get("style", ""))
+            reverse_arrow = start_arrow is not None and start_arrow.group(1) not in {"none", "0"}
+            record = {"name": cid, "start": cell.get("source"), "end": cell.get("target"),
+                      "arrow": arrow, "reverse_arrow": reverse_arrow}
             connections.append(record)
             if cid.startswith("rfs-edge:"):
                 edges[cid[len("rfs-edge:"):]] = record
@@ -215,8 +222,11 @@ def audit_native(spec: dict[str, Any], artifact: str | Path) -> dict:
         target = record["node_shape_ids"].get(actual["end"])
         if source != edge["source"] or target != edge["target"]:
             failed.append("Tagged connector endpoint mismatch: " + edge["id"])
-        if edge.get("directed") and not actual["arrow"]:
-            failed.append("Tagged directed connector lacks visible arrowhead: " + edge["id"])
+        if edge.get("directed"):
+            if not actual["arrow"] or actual["reverse_arrow"]:
+                failed.append("Tagged connector arrow direction is wrong or ambiguous: " + edge["id"])
+        elif actual["arrow"] or actual["reverse_arrow"]:
+            failed.append("Tagged undirected connector has unexpected arrowhead: " + edge["id"])
     tagged_coverage = (tagged_shapes == expected_ids and set(tagged_edges) == required_edge_ids)
     structural = "FAIL" if failed else "PASS" if tagged_coverage else "PENDING_UNTAGGED_OBJECTS"
     report = {"format": record["format"], "artifact": str(path),

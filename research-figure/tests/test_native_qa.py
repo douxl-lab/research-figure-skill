@@ -64,7 +64,7 @@ class NativeAcceptanceTests(unittest.TestCase):
         edge.name = "rfs-edge:ab"
         edge.begin_connect(nodes[0], 3)
         edge.end_connect(nodes[1], 1)
-        element = OxmlElement("a:headEnd")
+        element = OxmlElement("a:tailEnd")
         element.set("type", "triangle")
         edge._element.spPr.get_or_add_ln().append(element)
         path = self.root / "tagged.pptx"
@@ -73,6 +73,34 @@ class NativeAcceptanceTests(unittest.TestCase):
         self.assertEqual(result["structure_check"], "PASS")
         self.assertTrue(result["object_tags_complete"])
         self.assertEqual(result["target_render"], "NOT_RUN")
+
+    def test_tagged_pptx_reverse_arrow_is_rejected(self):
+        from pptx import Presentation
+        from pptx.enum.shapes import MSO_SHAPE, MSO_CONNECTOR
+        from pptx.util import Inches
+        from pptx.oxml.xmlchemy import OxmlElement
+        presentation = Presentation()
+        slide = presentation.slides.add_slide(presentation.slide_layouts[6])
+        objects = []
+        for index, (identity, label) in enumerate((("a", "Input"), ("b", "Encoder"))):
+            shape = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(1 + index * 3),
+                                            Inches(2), Inches(2), Inches(1))
+            shape.name, shape.text = "rfs-node:" + identity, label
+            objects.append(shape)
+        edge = slide.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, Inches(3), Inches(2.5),
+                                          Inches(4), Inches(2.5))
+        edge.name = "rfs-edge:ab"
+        edge.begin_connect(objects[0], 3)
+        edge.end_connect(objects[1], 1)
+        # a:headEnd means BEGINNING, so the diagram incorrectly points to Input.
+        reverse = OxmlElement("a:headEnd")
+        reverse.set("type", "triangle")
+        edge._element.spPr.get_or_add_ln().append(reverse)
+        path = self.root / "backwards.pptx"
+        presentation.save(path)
+        outcome = audit_native(fixture(), path)
+        self.assertEqual(outcome["status"], "FAIL")
+        self.assertIn("Tagged connector arrow direction is wrong or ambiguous: ab", outcome["failures"])
 
     def test_flattened_pptx_fails(self):
         from pptx import Presentation
