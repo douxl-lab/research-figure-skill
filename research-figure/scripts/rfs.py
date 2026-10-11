@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Research Figure Skill v0.3.1 — creative-first design with model-aware prompts.
+"""Research Figure Studio v0.4 — source-grounded figure routing and acceptance.
 
 No external services execute without explicit --allow-external.
 """
@@ -267,6 +267,13 @@ def main() -> int:
     pkg.add_argument("--overwrite", action="store_true")
     ap = sub.add_parser("audit-package", help="Verify reconstruction package bytes; native rendering stays PENDING")
     ap.add_argument("--package", required=True)
+    native = sub.add_parser("native-audit", help="Audit actual PPTX/draw.io native objects against canonical FigureSpec v1")
+    native.add_argument("--spec", required=True, help="Canonical FigureSpec v1 file")
+    native.add_argument("--native-file", required=True, help="Saved editable PPTX or draw.io XML")
+    native.add_argument("--render-with-libreoffice", action="store_true",
+                        help="Explicitly render trusted PPTX with LibreOffice (not a security sandbox)")
+    native.add_argument("--reference", help="Approved reference image; requires --render-with-libreoffice")
+    native.add_argument("--render-out", help="Save actual LibreOffice-rendered PNG (must not already exist)")
     hand = sub.add_parser("handoff", help="Create host-executable instructions; does NOT produce PPTX")
     hand.add_argument("--spec", required=True)
     hand.add_argument("--backend", choices=["paper-fig", "sivia"], required=True)
@@ -293,7 +300,7 @@ def main() -> int:
                 spec, report = load_and_validate(args.spec)
                 result = {"figure_id": spec.get("figure_id"), **report}
             _emit(result)
-            return 0 if report["valid"] else 2
+            return 0 if result["valid"] else 2
         elif args.command == "route":
             if bridge.is_canonical(args.spec):
                 spec = bridge._api()[1].load_spec(args.spec)
@@ -313,7 +320,30 @@ def main() -> int:
         elif args.command == "reconstruction-package":
             result = command_reconstruction_package(args)
         elif args.command == "audit-package":
-            result = bridge.audit_handoff(args.package) if (Path(args.package) / "manifest.json").is_file() else audit_reconstruction_package(args.package)
+            receipt_path = Path(args.package) / "manifest.json"
+            if receipt_path.is_file():
+                try:
+                    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+                except (OSError, ValueError) as exc:
+                    raise RFSValidationError("Canonical package manifest is malformed") from exc
+                if receipt.get("format") != "rfs-native-handoff/1.0":
+                    raise RFSValidationError("Unrecognized canonical handoff format")
+                result = bridge.audit_handoff(args.package)
+            else:
+                result = audit_reconstruction_package(args.package)
+        elif args.command == "native-audit":
+            from native_qa import NativeAuditError, audit_native, render_pptx, compare_reference
+            if (args.reference or args.render_out) and not args.render_with_libreoffice:
+                raise NativeAuditError("--reference and --render-out require --render-with-libreoffice")
+            spec = bridge._api()[1].load_spec(args.spec)
+            result = audit_native(spec, args.native_file)
+            if args.render_with_libreoffice:
+                actual_png = render_pptx(args.native_file, save_png=args.render_out)
+                result["target_render"] = "RENDERED_WITH_LIBREOFFICE"
+                result["reference_comparison"] = (compare_reference(args.reference, actual_png)
+                                                   if args.reference else "PENDING_REFERENCE_IMAGE")
+            _emit(result)
+            return 2 if result["status"] == "FAIL" else 0
         elif args.command == "handoff":
             result = command_handoff(args)
         elif args.command == "audit":

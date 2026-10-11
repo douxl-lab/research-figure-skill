@@ -16,6 +16,12 @@ The editable builder receives three complementary sources:
 - The packaging script copies image and notes, snapshots FigureSpec, writes an explicit reconstruction guide, and produces SHA256 receipt. Run `rfs.py audit-package --package ...` to verify **integrity**, not native editability.
 - Pass the *whole package* to the installed native backend. Prefer paper-fig for editable PPTX if it has the required runtime; Sivia for supported live native editors, subject to its noncommercial license; draw.io if a live backend is actually available.
 
+## Native source acceptance after the backend has actually run
+
+For a **canonical v1** reconstruction, run `rfs.py native-audit --spec /project/figure-spec-v1.json --native-file /project/figure.pptx` after the editable builder saves its output. The audit counts PowerPoint editable shapes/connectors versus raster pictures or draw.io vertices/edges; checks exact label coverage; and verifies labelled scientific IDs and typed connector direction when available. Builders should tag semantic nodes `rfs-node:<id>` and edges `rfs-edge:<id>` (with source/target links and arrowheads). Untagged native files stay `PENDING_OBJECT_MAPPING_AND_VISUAL_REVIEW` rather than being misrepresented as proof of correct topology. A diagram flattened to one embedded image fails.
+
+For an existing trusted PPTX and an actual approved reference image, add `--render-with-libreoffice --reference ... --render-out ...` to open the **saved** document through LibreOffice, inspect its new raster render and compute a diagnostic difference; requires local LibreOffice and PyMuPDF. The numeric comparison is not a high-fidelity approval and should be followed by visual and object-level review. Never render untrusted files outside a disposable, restricted environment. Draw.io XML structural inspection is supported without a UI; native draw.io rendering is not automatically provided.
+
 ## Discrepancy precedence
 
 1. **Science > aesthetics**: scientific topology and real source results outrank image-generated arrows, text or implied evidence.

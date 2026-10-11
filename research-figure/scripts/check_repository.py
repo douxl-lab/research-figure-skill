@@ -73,7 +73,7 @@ def public_path(path: str) -> bool:
         return False
     sub = parts[1:]
     if len(sub) == 1:
-        return sub[0] in {"SKILL.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "requirements-plot.txt", "requirements-exchange.txt"}
+        return sub[0] in {"SKILL.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "requirements-plot.txt", "requirements-exchange.txt", "requirements-native-qa.txt"}
     if len(sub) < 2:
         return False
     if sub[0] == "protocol" and path == "research-figure/protocol/LICENSE-APACHE-2.0":

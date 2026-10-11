@@ -69,6 +69,27 @@ python research-figure/scripts/rfs.py reconstruction-package --spec "$FIG" \
 
 `ACTUAL_CANDIDATE` 必须替换成实际输出目录名。只有完整检查结果才能进入重建，图片美观不代表结构可靠；用户批准视觉构图也不意味着科学事实已经验证。`--allow-external` 不应在没有授权时使用。
 
+## 原生可编辑 PPTX / draw.io 验收
+
+新版 `native-audit` 用于**检查已经由真实后端生成并保存的原生文件**，不会把一张 PNG 伪装成 PPTX，也不会自动重绘批准的复杂构图。它核对可编辑文字、对象数量、连接线以及可选的稳定对象 ID。推荐在原生对象命名时使用 `rfs-node:<FigureSpec ID>` 和 `rfs-edge:<FigureSpec ID>`，并保留连接线的实际起终点和箭头。
+
+```bash
+python research-figure/scripts/rfs.py native-audit \
+  --spec /project/figure-spec.json --native-file /project/rebuilt.pptx
+
+# 对可信 PPTX 明确选择真正的 LibreOffice 导入/导出，并与批准的图片做诊断性比较：
+python research-figure/scripts/rfs.py native-audit \
+  --spec /project/figure-spec.json --native-file /project/rebuilt.pptx \
+  --render-with-libreoffice --reference /project/approved.png \
+  --render-out /project/rebuilt-actual-render.png
+
+# draw.io：结构校验支持普通或压缩 XML；渲染需实际可用的 draw.io 应用：
+python research-figure/scripts/rfs.py native-audit \
+  --spec /project/figure-spec.json --native-file /project/rebuilt.drawio
+```
+
+纯对象检查基于 Python 标准库；PPTX 文件生成与渲染验收的本地测试工具见 `research-figure/requirements-native-qa.txt`。启用实际渲染还需要系统 LibreOffice；不可将它当成对不可信文件的安全沙箱。像素差异分数只是排查线索，**不是高保真证明**；字体、遮挡、构图、科学内容和完整编辑性仍需人工核查。无原生文件或无实际渲染时保持 PENDING。
+
 ## 兼容老项目
 
 v0.3.x `schema_version: "0.1.0"` 的 `type`/`diagram` 结构保留为**旧式兼容输入**；旧版例子与测试不被静默转换成新科学事实。**新项目应直接生成 FigureSpec v1**。两种结构不会在同一任务里混用。混合图需拆分方法示意部分和数据部分。

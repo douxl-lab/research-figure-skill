@@ -30,7 +30,7 @@ jobs:
           path: _peer/paperbanana
           persist-credentials: false
       - name: Install canonical exchange dependencies
-        run: python -m pip install -r research-figure/requirements-exchange.txt -r research-figure/requirements-plot.txt
+        run: python -m pip install -r research-figure/requirements-exchange.txt -r research-figure/requirements-plot.txt -r research-figure/requirements-native-qa.txt
       - name: Validate Agent Skill package
         run: python research-figure/scripts/check_skill.py
       - name: Scan tracked files for secrets and private developer state
