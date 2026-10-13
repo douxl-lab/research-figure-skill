@@ -1,4 +1,4 @@
-**Canonical routing:** new FigureSpec Exchange v1 diagrams use PaperBanana if explicitly authorized and its pinned protocol matches, otherwise compile a prompt without claiming an image exists; new v1 numerical plots use original data. Do not route a canonical complex diagram to SVG automatically. See [canonical-exchange](canonical-exchange.md). Below: legacy v0.1 routing detail.
+**Canonical routing:** FigureSpec Exchange v1 diagrams default to PaperBanana when explicitly authorized and protocol-paired, otherwise to prompt-only. The new **explicit** `--engine tikz` route builds local, source-preserving vector diagrams without any model/API call. It does not automatically replace creative diagrams or attempt to reproduce a PaperBanana image pixel for pixel. Canonical v1 numerical plots always use the original data; hybrids remain split. Do not route a canonical complex diagram to legacy SVG automatically. See [TikZ workflow](tikz-workflow.md) and [canonical-exchange](canonical-exchange.md). Below: legacy v0.1 routing detail.
 
 # FigureRouter: A/C 双主路线，B 按需使用
 

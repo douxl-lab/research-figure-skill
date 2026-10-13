@@ -13,6 +13,7 @@
 | 路线 | 默认执行 | 实际产物 |
 |---|---|---|
 | **A · 生成式优先** | 可用时调用 PaperBanana；否则先产出专业 Prompt | 候选图、实际 Prompt、设计说明、完整科学规格及哈希；无模型授权时只是 Prompt |
+| **T · 精密矢量（显式选择）** | FigureSpec v1 + 安全转义 + TikZ/XeLaTeX/Poppler，本地绘制公式、时序和结构图 | 可复现的 .tex、PDF、SVG、PNG、完整 FigureSpec 和 SHA-256 验收记录 |
 | **C · 数据优先** | Matplotlib 使用 FigureSpec 中的真实原始数据 | SVG、PDF、PNG + 原始完整数据/科学规格 + `plot-reproduce.py` + 哈希清单 |
 | **可编辑重建** | 经审核的候选图 + 原始 FigureSpec + 观察图片后的文字指导 | 严格验收的重建任务包；真正的 PPTX/draw.io 需要另装可编辑后端 |
 | **B · 直接原生** | 仅明确指定的简单结构图 | 旧版精确 SVG，不作为复杂方法图的美学默认解 |
@@ -72,6 +73,23 @@ python research-figure/scripts/rfs.py reconstruction-package --spec "$FIG" \
 ```
 
 `ACTUAL_CANDIDATE` 必须替换成实际输出目录名。只有完整检查结果才能进入重建，图片美观不代表结构可靠；用户批准视觉构图也不意味着科学事实已经验证。`--allow-external` 不应在没有授权时使用。
+
+## TikZ 本地矢量后端（新增，显式选用）
+
+默认的生成式方法图仍优先使用 PaperBanana；需要精确数学公式、流程/时序布局和可复现代码的**纯示意图**时，才选 `--engine tikz`。新路线与 PaperBanana 共享 FigureSpec v1 的科学数据与指纹，不更改 schema、validator 或双方互通协议，也不会在未授权时调用任何外部 API。
+
+先安装 XeLaTeX（含 TikZ/standalone/fontspec/amsmath）与 Poppler 的 `pdftocairo`。中文最好提供 Noto Sans CJK SC；编译环境缺失时明确报错而不是伪造矢量文件。
+
+```bash
+FIG=research-figure/assets/figure-spec-v1-example.json
+python research-figure/scripts/rfs.py route --spec "$FIG" --engine tikz
+python research-figure/scripts/rfs.py run --spec "$FIG" --engine tikz --out /tmp/rfs-encoder-tikz
+python research-figure/scripts/rfs.py audit --spec "$FIG" --artifact /tmp/rfs-encoder-tikz
+```
+
+交付文件包含 `figure.tex`、`figure.pdf`、`figure.svg`、`figure.png`、`figure-spec.json`、`manifest.json`。数学公式只接受安全白名单命令，所有自由文本自动 TeX 转义，默认禁止 shell escape；这仍不是对恶意 TeX 的完整沙箱，陌生输入应在受限容器中执行。有限的自动布局不保证复杂图避免所有交叉，必须实际渲染并检查。
+
+**PaperBanana 适配：** 已选中的候选图可由 PaperBanana 的 `skill/exchange.py vector-handoff` 导出经过哈希验证的图片、设计说明和同源 FigureSpec，供 TikZ 独立重绘时作视觉参考；不得宣称位图与 TikZ 输出一一像素一致。详见 [TikZ 工作流](research-figure/references/tikz-workflow.md)。
 
 ## 原生可编辑 PPTX / draw.io 验收
 

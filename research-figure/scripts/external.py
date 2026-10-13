@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -70,6 +71,8 @@ def doctor() -> dict:
     sv = os.environ.get("RFS_SIVIA_SKILL", "")
     return {
         "python": sys.version.split()[0],
+        "tikz": {"xelatex": bool(shutil.which("xelatex")), "pdftocairo": bool(shutil.which("pdftocairo")),
+                 "ready": bool(shutil.which("xelatex") and shutil.which("pdftocairo"))},
         "matplotlib_available": bool(importlib.util.find_spec("matplotlib")),
         "paperbanana": pb,
         "paper_fig_skill_declared": bool(pf),

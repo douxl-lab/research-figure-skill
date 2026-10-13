@@ -89,6 +89,9 @@ def explain_route(spec: dict, *, engine="auto", allow_external=False) -> dict:
         return {"engine": "plot-matplotlib", "requires_external": False}
     if kind == "hybrid":
         raise ValueError("Hybrid figures must be split into a diagram and original-data panels; do not synthesize measurements")
+    if engine == "tikz":
+        return {"engine": "tikz", "requires_external": False,
+                "reason": "Explicit, local source-preserving vector rendering; layout and scientific review remain pending"}
     if engine not in {"auto", "paperbanana", "prompt-only"}:
         raise ValueError("Canonical v1 diagram uses PaperBanana or a host-generation prompt; not raw SVG layout")
     if engine == "paperbanana" and not allow_external:
@@ -157,6 +160,12 @@ def generate(spec_path: str | Path, out: str | Path, *, candidates=2, allow_exte
     return {"status": status, "request": str(req_path), "bundles": artifacts,
             "candidate_count": len(artifacts),
             "known_limitations": ["Live visual/scientific assessment pending", "No native editable file created"]}
+
+
+def render_tikz_v1(spec: dict, output: str | Path) -> dict:
+    """Explicit canonical v1 local renderer; not a replacement for PaperBanana's creative default."""
+    from tikz_renderer import render_tikz
+    return render_tikz(spec, output)
 
 
 def render_plot_v1(spec: dict, output: str | Path) -> dict:
@@ -307,6 +316,12 @@ def prepare_editable(spec_path: str | Path, bundle: str | Path, notes: str | Pat
 def audit_bundle(spec_path: str | Path, bundle: str | Path) -> dict:
     contract, interop, _ = _api()
     expected = interop.load_spec(spec_path)
+    receipt = Path(bundle) / "manifest.json"
+    if receipt.is_file():
+        summary = json.loads(receipt.read_text(encoding="utf-8"))
+        if summary.get("format") == "rfs-tikz/1.0":
+            from tikz_renderer import audit_tikz
+            return audit_tikz(expected, bundle)
     manifest, actual, files = interop.verify_result(bundle, expected)
     return {"integrity": "PASS", "candidate_id": manifest["candidate_id"],
             "scientific_fingerprint": contract.scientific_fingerprint(actual),

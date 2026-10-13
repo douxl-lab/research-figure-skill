@@ -11,6 +11,7 @@
 | Candidate comparison | Visually distinct candidates, scientific accuracy before aesthetics, crossing/occlusion audits | `compare` creates a *review prompt* only; host must perform visual review |
 | Design lock | Explicit approved candidate, image-anchored written guidance, no unexplained conflicts | `reconstruction-package` receipt + reviewer/author notes; design approval distinct from scientific validation |
 | Numeric plot | Real CSV, finite values, no silent imputation/aggregation, source hash, vector/rendered figure | Source receipt and plot artifact, no invented confidence intervals |
+| Local TikZ vector | Canonical v1 fingerprint, allowed TeX math macros, no shell escape, XeLaTeX/Poppler exit status, nonempty PDF/SVG/PNG, source and output hashes | Compiler and integrity PASS are not scientific validation, publication-size visual review, or PPTX object editability |
 | Native reconstruction | Editability at object-level, correct text and connectors, independent irreducible raster art | Inspect actual PPTX/draw.io structure, not a screenshot alone |
 | Publication render | Renderer imports **actual saved file**, no clipping/occlusion, legible at paper width; grayscale when relevant | Reopen/rendered image from same file + explicit renderer identification |
 | Final delivery | Requested formats really exist and satisfy purpose, unresolved issues disclosed | PASS/FAIL/PENDING per dimension; do not assert full PASS if unreviewed |

@@ -84,6 +84,10 @@ def command_run(args: argparse.Namespace) -> dict:
     if bridge.is_canonical(args.spec):
         spec = bridge._api()[1].load_spec(args.spec)
         plan = bridge.explain_route(spec, engine=args.engine, allow_external=args.allow_external)
+        if plan["engine"] == "tikz":
+            if args.model is not None:
+                raise RFSValidationError("--model is for image-model prompts, not local TikZ rendering")
+            return bridge.render_tikz_v1(spec, args.out)
         if plan["engine"] == "plot-matplotlib":
             return bridge.render_plot_v1(spec, args.out)
         if plan["engine"] == "prompt-only":
@@ -228,12 +232,12 @@ def main() -> int:
     valid.add_argument("--spec", required=True)
     r = sub.add_parser("route", help="Choose one creation route; does not execute it")
     r.add_argument("--spec", required=True)
-    r.add_argument("--engine", choices=["auto", "native-svg", "paperbanana", "plot-matplotlib", "prompt-only"], default="auto")
+    r.add_argument("--engine", choices=["auto", "native-svg", "paperbanana", "plot-matplotlib", "prompt-only", "tikz"], default="auto")
     r.add_argument("--allow-external", action="store_true")
     run = sub.add_parser("run", help="Generate actual SVG/plots or optionally invoke installed PaperBanana")
     run.add_argument("--spec", required=True)
     run.add_argument("--out", required=True)
-    run.add_argument("--engine", choices=["auto", "native-svg", "paperbanana", "plot-matplotlib", "prompt-only"], default="auto")
+    run.add_argument("--engine", choices=["auto", "native-svg", "paperbanana", "plot-matplotlib", "prompt-only", "tikz"], default="auto")
     run.add_argument("--allow-external", action="store_true", help="Explicitly authorizes external PaperBanana API and possible downloads")
     run.add_argument("--profile", default="generic", help="Prompt adapter key from assets/prompts/model-profiles.json")
     add_model_options(run)
