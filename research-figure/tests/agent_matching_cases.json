@@ -1,6 +1,6 @@
 {
-  "corpus_version": "0.3.0",
-  "notice": "Human-authored expectations only; not results of an LLM/agent invocation benchmark.",
+  "corpus_version": "0.6.0",
+  "notice": "Human-authored positive/negative/competing-skill expectations; these are NOT observed LLM invocation metrics. Test metadata/dispatched CLI separately.",
   "cases": [
     {
       "id": "P01",
@@ -244,6 +244,111 @@
       "id": "N18",
       "lang": "zh",
       "prompt": "只使用 $paper-fig 制作用户手册截图页面，不需要 RFS 调度。",
+      "activate": false,
+      "expected_route": "explicit-other-skill"
+    },
+    {
+      "id": "P18",
+      "lang": "zh",
+      "prompt": "请严格用 LaTeX TikZ 生成论文方法流程图，含数学公式并交付 .tex 和矢量 PDF。",
+      "activate": true,
+      "expected_route": "tikz"
+    },
+    {
+      "id": "P19",
+      "lang": "en",
+      "prompt": "Produce a reproducible TikZ timing diagram with labelled transitions for Figure 2 of my paper.",
+      "activate": true,
+      "expected_route": "tikz"
+    },
+    {
+      "id": "P20",
+      "lang": "zh",
+      "prompt": "请从 SEN12-MLRS 实验结果 CSV 绘制论文中的精确 Precision-Recall 曲线，数据不要造假。",
+      "activate": true,
+      "expected_route": "plot-matplotlib"
+    },
+    {
+      "id": "P21",
+      "lang": "en",
+      "prompt": "Audit my selected PaperBanana method figure against FigureSpec, including arrow directions.",
+      "activate": true,
+      "expected_route": "audit"
+    },
+    {
+      "id": "P22",
+      "lang": "zh",
+      "prompt": "帮我核查研究论文 SVG 机制图的字体嵌入、连线语义和投稿单栏尺寸。",
+      "activate": true,
+      "expected_route": "audit"
+    },
+    {
+      "id": "P23",
+      "lang": "en",
+      "prompt": "I want a science-grounded design brief for a remote-sensing model architecture figure, not the finished image yet.",
+      "activate": true,
+      "expected_route": "prompt-model-adapter"
+    },
+    {
+      "id": "P24",
+      "lang": "zh",
+      "prompt": "请给论文图3中的跨模态注意力分支做局部图形修改，别改变其它节点和连接。",
+      "activate": true,
+      "expected_route": "scoped-image-refine"
+    },
+    {
+      "id": "N19",
+      "lang": "zh",
+      "prompt": "用 LaTeX 排版一篇遥感论文的数学公式，暂时不做示意图。",
+      "activate": false,
+      "expected_route": "none"
+    },
+    {
+      "id": "N20",
+      "lang": "en",
+      "prompt": "Create a TikZ floor plan of my apartment for a renovation, not a scientific article.",
+      "activate": false,
+      "expected_route": "none"
+    },
+    {
+      "id": "N21",
+      "lang": "zh",
+      "prompt": "只用 $paperbanana 生成我给定方法图，不需要科研绘图调度或 RFS 审核。",
+      "activate": false,
+      "expected_route": "explicit-other-skill"
+    },
+    {
+      "id": "N22",
+      "lang": "zh",
+      "prompt": "帮我做一张商业路演的融资流程图，放进 PPT 演示文稿。",
+      "activate": false,
+      "expected_route": "none"
+    },
+    {
+      "id": "N23",
+      "lang": "zh",
+      "prompt": "解释训练 loss 为什么忽高忽低，不需要绘图。",
+      "activate": false,
+      "expected_route": "none"
+    },
+    {
+      "id": "N24",
+      "lang": "en",
+      "prompt": "Write the Figure 1 caption for my paper. Do not make or edit an image.",
+      "activate": false,
+      "expected_route": "none"
+    },
+    {
+      "id": "N25",
+      "lang": "zh",
+      "prompt": "给我润色论文方法章节中的机制描述，不绘制任何科研图。",
+      "activate": false,
+      "expected_route": "none"
+    },
+    {
+      "id": "N26",
+      "lang": "en",
+      "prompt": "Only use $paper-fig to replace a screenshot on slide 4; don't invoke any scientific figure router.",
       "activate": false,
       "expected_route": "explicit-other-skill"
     }

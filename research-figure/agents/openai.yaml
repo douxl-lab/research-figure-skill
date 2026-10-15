@@ -1,4 +1,4 @@
 interface:
   display_name: "Research Figure Studio"
-  short_description: "Scientific figure design, plots, and editable reconstruction"
-  default_prompt: "Use $research-figure to plan and create my scientific paper figure, use model-adapted visual prompts or real-data plots as appropriate, and verify the actual deliverables."
+  short_description: "Publication figure routing, source plots and scientific audits"
+  default_prompt: "Use $research-figure to create a publication figure from my verified method or data, choose the appropriate rendering route, and report actual validation and pending reviews."

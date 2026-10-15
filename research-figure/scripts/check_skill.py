@@ -89,6 +89,12 @@ def check(root: Path) -> dict:
     compat = meta.get("compatibility")
     if compat is not None and (not isinstance(compat, str) or not 1 <= len(compat) <= 500):
         errors.append("compatibility must be a string 1..500 characters")
+    if meta.get("license") is not None and (not isinstance(meta["license"], str) or not meta["license"].strip()):
+        errors.append("license must be a nonempty string when present")
+    if meta.get("allowed-tools") is not None and not isinstance(meta["allowed-tools"], str):
+        errors.append("allowed-tools must be a space-separated string when present")
+    if isinstance(desc, str) and len(desc) > 700:
+        warnings.append("Discovery description is lengthy; consider narrowing triggers to reduce collisions")
     mm = meta.get("metadata")
     if mm is not None and (not isinstance(mm, dict) or not all(isinstance(k, str) and isinstance(v, str) for k,v in mm.items())):
         errors.append("metadata must be a string-to-string YAML mapping")
@@ -97,32 +103,46 @@ def check(root: Path) -> dict:
     for rel in sorted(set(re.findall(r"\]\(((?:references|scripts|assets)/[^)#]+)(?:#[^)]*)?\)", contents))):
         if not (root / rel).is_file():
             errors.append(f"Broken local relative link in SKILL.md: {rel}")
-    # Codex extension is optional, not part of core Agent Skills spec.
+    # Optional Codex UI metadata is not a portable skill-discovery override.
     agent = root / "agents" / "openai.yaml"
     if agent.is_file():
+        ext = None
         try:
             import yaml
             ext = yaml.safe_load(agent.read_text(encoding="utf-8"))
         except ImportError:
-            # Minimal optional extension check when PyYAML is unavailable.
-            ext_raw = agent.read_text(encoding="utf-8")
-            pairs = dict(re.findall(r'(?m)^[ ]{2}(display_name|short_description|default_prompt):\s*"([^"\n]*)"', ext_raw))
+            # Restricted fallback for CI installations without PyYAML.
+            # Still run the same interface checks; previously the except/else
+            # control flow accidentally bypassed them.
+            raw = agent.read_text(encoding="utf-8")
+            pairs = dict(re.findall(r'(?m)^[ ]{2}(display_name|short_description|default_prompt):\s*"([^"\n]*)"', raw))
             ext = {"interface": pairs}
+            match = re.search(r'(?m)^  allow_implicit_invocation: (true|false)$', raw)
+            if match:
+                ext["policy"] = {"allow_implicit_invocation": match.group(1) == "true"}
         except Exception as exc:
             errors.append(f"agents/openai.yaml could not be parsed: {exc}")
-        else:
-            face = ext.get("interface", {}) if isinstance(ext, dict) else {}
-            if not isinstance(face, dict):
-                errors.append("agents/openai.yaml interface must be mapping")
+        if ext is not None:
+            if not isinstance(ext, dict):
+                errors.append("agents/openai.yaml must be a YAML mapping")
             else:
-                short = face.get("short_description")
-                if not isinstance(short, str) or not 25 <= len(short) <= 64:
-                    errors.append("agents/openai.yaml short_description should be 25..64 characters")
-                if not isinstance(face.get("display_name"), str) or not face["display_name"].strip():
-                    errors.append("agents/openai.yaml missing display_name")
-                prompt = face.get("default_prompt", "")
-                if prompt and (not isinstance(prompt, str) or "$research-figure" not in prompt):
-                    errors.append("default_prompt must explicitly name $research-figure")
+                face = ext.get("interface")
+                if not isinstance(face, dict):
+                    errors.append("agents/openai.yaml interface must be a mapping")
+                else:
+                    short = face.get("short_description")
+                    if not isinstance(short, str) or not 25 <= len(short) <= 64:
+                        errors.append("agents/openai.yaml short_description should be 25..64 characters")
+                    if not isinstance(face.get("display_name"), str) or not face["display_name"].strip():
+                        errors.append("agents/openai.yaml missing display_name")
+                    prompt = face.get("default_prompt")
+                    if not isinstance(prompt, str) or "$research-figure" not in prompt:
+                        errors.append("agents/openai.yaml default_prompt must explicitly name $research-figure")
+                policy = ext.get("policy", {})
+                if not isinstance(policy, dict):
+                    errors.append("agents/openai.yaml policy must be a mapping")
+                elif "allow_implicit_invocation" in policy and type(policy["allow_implicit_invocation"]) is not bool:
+                    errors.append("agents/openai.yaml allow_implicit_invocation must be boolean")
     else:
         warnings.append("Optional Codex agents/openai.yaml not provided")
     return {"valid": not errors, "errors": errors, "warnings": warnings,

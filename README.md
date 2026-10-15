@@ -18,6 +18,21 @@
 | **可编辑重建** | 经审核的候选图 + 原始 FigureSpec + 观察图片后的文字指导 | 严格验收的重建任务包；真正的 PPTX/draw.io 需要另装可编辑后端 |
 | **B · 直接原生** | 仅明确指定的简单结构图 | 旧版精确 SVG，不作为复杂方法图的美学默认解 |
 
+## Agent Skills 自动匹配与质量核查（v0.6）
+
+本仓库唯一的正式 Skill 入口是 `research-figure/SKILL.md`（名称与目录一致）；`agents/openai.yaml` 只用于支持该扩展的客户端展示。**自动匹配首先由 `description` 决定，而非正文的关键词表。** 因此 RFS 只认需要真实科研图、论文图件编辑/审查的任务；纯模型讲解、论文写作、商业图表、一般 PPT，以及明确指定仅调用 PaperBanana 或其它专用 Skill 的请求，不应触发 RFS。
+
+当用户请求整个科研绘图工作流时，先由 RFS 选择生成式、真实数据绘图或显式 TikZ 路线；当用户只要求 PaperBanana 引擎生成时，直接交由 `paperbanana`，避免双层 Planner/Critic。完整边界见 [Agent 匹配说明](research-figure/references/agent-matching.md)。
+
+~~~bash
+python research-figure/scripts/check_skill.py
+python -m unittest discover -s research-figure/tests -q
+# 官方 Agent Skills 参考实现（安装后）：
+skills-ref validate research-figure
+~~~
+
+已维护中英文正负样例、RFS/PaperBanana/无匹配的成对样例和真实 CLI 后端分派测试。**样例通过不等于模型自动触发准确率**；实际 precision/recall 需要在提供两个 Skill 的目标 Agent 宿主中运行并记录真实触发结果。
+
 ## 安装
 
 ```bash

@@ -1,0 +1,192 @@
+{
+  "corpus_version": "0.6.0",
+  "notice": "Offline pairwise intent labels for human/host-agent evaluation. Not observations of an LLM's automatic selection or empirical precision/recall.",
+  "skills": [
+    "research-figure",
+    "paperbanana"
+  ],
+  "cases": [
+    {
+      "id": "S01",
+      "lang": "zh",
+      "prompt": "根据 MRLQ-EF 代码给论文绘制完整机制图，并检查连接和尺寸",
+      "intended_skill": "research-figure",
+      "category": "creative"
+    },
+    {
+      "id": "S02",
+      "lang": "zh",
+      "prompt": "请把真实训练结果 CSV 画成论文中的对比曲线",
+      "intended_skill": "research-figure",
+      "category": "data"
+    },
+    {
+      "id": "S03",
+      "lang": "en",
+      "prompt": "Audit this scientific architecture PPTX for editability and wrong arrows",
+      "intended_skill": "research-figure",
+      "category": "audit"
+    },
+    {
+      "id": "S04",
+      "lang": "zh",
+      "prompt": "请用 TikZ 生成论文算法时序图和矢量 PDF",
+      "intended_skill": "research-figure",
+      "category": "tikz"
+    },
+    {
+      "id": "S05",
+      "lang": "en",
+      "prompt": "Make an author-ready method diagram and deliver source evidence and a vector copy",
+      "intended_skill": "research-figure",
+      "category": "creative"
+    },
+    {
+      "id": "S06",
+      "lang": "en",
+      "prompt": "Build a visual design prompt for an academic mechanism figure without executing an image model",
+      "intended_skill": "research-figure",
+      "category": "prompt"
+    },
+    {
+      "id": "S07",
+      "lang": "zh",
+      "prompt": "检查 PaperBanana 候选图是否和论文代码的科学结构一致",
+      "intended_skill": "research-figure",
+      "category": "audit"
+    },
+    {
+      "id": "S08",
+      "lang": "en",
+      "prompt": "I want PaperBanana image generation followed by RFS scientific acceptance and publication checks",
+      "intended_skill": "research-figure",
+      "category": "workflow"
+    },
+    {
+      "id": "S09",
+      "lang": "zh",
+      "prompt": "我要把现成的科研图按原样做成真正可编辑的 PPTX 并验证",
+      "intended_skill": "research-figure",
+      "category": "reconstruction"
+    },
+    {
+      "id": "S10",
+      "lang": "en",
+      "prompt": "Lay out optical and SAR real-image panels without changing original pixels",
+      "intended_skill": "research-figure",
+      "category": "empirical"
+    },
+    {
+      "id": "S11",
+      "lang": "en",
+      "prompt": "Use $paperbanana alone to generate my supplied scientific overview; no separate RFS routing",
+      "intended_skill": "paperbanana",
+      "category": "explicit"
+    },
+    {
+      "id": "S12",
+      "lang": "zh",
+      "prompt": "单独调用 $paperbanana 的五智能体生成方法架构候选图，不需要 RFS",
+      "intended_skill": "paperbanana",
+      "category": "explicit"
+    },
+    {
+      "id": "S13",
+      "lang": "en",
+      "prompt": "PaperBanana: run the authorized RFS exchange request and return the image candidate bundle",
+      "intended_skill": "paperbanana",
+      "category": "direct-engine"
+    },
+    {
+      "id": "S14",
+      "lang": "en",
+      "prompt": "With the PaperBanana engine only, validate an existing provider candidate exchange bundle",
+      "intended_skill": "paperbanana",
+      "category": "exchange"
+    },
+    {
+      "id": "S15",
+      "lang": "zh",
+      "prompt": "只使用 PaperBanana 的 vector-handoff 功能导出候选设计参考",
+      "intended_skill": "paperbanana",
+      "category": "direct-engine"
+    },
+    {
+      "id": "S16",
+      "lang": "en",
+      "prompt": "Use $paperbanana to render the already prepared scientific FigureSpec; no other tasks",
+      "intended_skill": "paperbanana",
+      "category": "explicit"
+    },
+    {
+      "id": "S17",
+      "lang": "zh",
+      "prompt": "解释标签级 Router 为什么可能学到共现偏差，不需要做图",
+      "intended_skill": "none",
+      "category": "no-figure"
+    },
+    {
+      "id": "S18",
+      "lang": "en",
+      "prompt": "Typeset LaTeX equations in my manuscript, without any figure",
+      "intended_skill": "none",
+      "category": "typesetting"
+    },
+    {
+      "id": "S19",
+      "lang": "zh",
+      "prompt": "给我们团队制作商业指标销售大屏",
+      "intended_skill": "none",
+      "category": "dashboard"
+    },
+    {
+      "id": "S20",
+      "lang": "zh",
+      "prompt": "直接使用 $paper-fig 修改第四页 PPT 普通截图",
+      "intended_skill": "none",
+      "category": "other-skill"
+    },
+    {
+      "id": "S21",
+      "lang": "en",
+      "prompt": "Create an Instagram landscape illustration for my lab",
+      "intended_skill": "none",
+      "category": "decorative"
+    },
+    {
+      "id": "S22",
+      "lang": "zh",
+      "prompt": "列出这几篇遥感论文的创新点并写 Related Work",
+      "intended_skill": "none",
+      "category": "writing"
+    },
+    {
+      "id": "S23",
+      "lang": "en",
+      "prompt": "Write Python unit tests for Matplotlib plotting helpers; no figure requested",
+      "intended_skill": "none",
+      "category": "code"
+    },
+    {
+      "id": "S24",
+      "lang": "zh",
+      "prompt": "帮我做实验 PPT 汇报，设计一张封面幻灯片",
+      "intended_skill": "none",
+      "category": "slides"
+    },
+    {
+      "id": "S25",
+      "lang": "en",
+      "prompt": "Explain how TikZ macros work without drawing a technical illustration",
+      "intended_skill": "none",
+      "category": "explanation"
+    },
+    {
+      "id": "S26",
+      "lang": "en",
+      "prompt": "Please compare the architecture of PaperBanana and RFS as software, no diagram",
+      "intended_skill": "none",
+      "category": "software-review"
+    }
+  ]
+}
