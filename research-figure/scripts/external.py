@@ -135,7 +135,7 @@ def call_paperbanana(spec: dict, out_dir: Path, *, allow_external: bool,
     if not 60 <= timeout <= 7200:
         raise RFSValidationError("--timeout must be between 60 and 7200 seconds")
     status = paperbanana_status()
-    if not status["ready"]:
+    if not status["configured_present"]:
         raise RFSValidationError("PaperBanana unavailable: set PAPERBANANA_ROOT and provider credentials, then run doctor")
     if image_model is not None:
         if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.:/-]{0,128}", image_model):
