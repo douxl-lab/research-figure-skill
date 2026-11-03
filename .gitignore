@@ -186,3 +186,11 @@ id_ed25519*
 
 # Reproducible offline CI peer checkout is runtime-only
 /_peer/
+# Local additions (v0.6.1)
+configs/
+.skill-lock.json
+_*_tmp/
+_*.[jp]p[g]?
+# scratch scripts & evidence crops produced during development
+_*.py
+_*.png

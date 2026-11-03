@@ -5,7 +5,7 @@ description: >-
 license: MIT
 compatibility: Python 3.10+ for CLI; optional Matplotlib for numeric plots, XeLaTeX/Poppler for TikZ, authorized PaperBanana/image provider for generative output, and separately installed native backend for editable PPTX/draw.io.
 metadata:
-  version: "0.6.0"
+  version: "0.6.1"
   category: "scientific-figure-orchestration"
 ---
 
@@ -29,11 +29,16 @@ Read [agent matching boundaries](references/agent-matching.md) for ambiguous/com
 | Creative research method/architecture figure | **A**: source-grounded FigureSpec → model prompt or authorized PaperBanana → inspect candidate | Prompt-only is not a figure; a generated picture is not proof of scientific accuracy |
 | Explicit TikZ/LaTeX source or precise formula/flow/timing vector diagram | **T**: canonical FigureSpec v1 → local XeLaTeX → TEX/PDF/SVG/PNG | Explicit opt-in only; not a generic replacement for creative art |
 | Real-data training, benchmark, ablation, or statistical figure | **C**: source data → deterministic Matplotlib → plot and reproducible code | Never generate, estimate or silently alter measurements |
-| Approved scientific figure requiring editable PPTX/draw.io | **Reconstruction**: approved image + FigureSpec + observed design notes → installed native builder | Skip redesign; a package or SVG alone is not editable PPTX |
+| Approved scientific figure requiring editable PPTX/draw.io | **Reconstruction**: approved image + FigureSpec + observed design notes → installed native builder (protocol entry `recreate-scientific-figure`; backends: paper-fig PPTX / draw.io live / html-to-pptx degradation) | Skip redesign; a package or SVG alone is not editable PPTX |
+| Native editable pipeline from a paper, deterministic objects, no AI generation | **Sivia native route**: paper → knowledge-base overview → approved design → native PPTX (NonCommercial license — confirm before commercial use) | Pick one primary producer per task; never run two creation agents |
 | Simple exact native structure on legacy spec | **B**: legacy native SVG, if explicitly selected | Do not silently downgrade a creative brief to basic boxes |
 | Optical/SAR/other empirical source-image panel | Preserve actual images/pixels, add truthful labels and review | No synthetic output may be presented as observed data |
 
 A scientific architecture defaults to **A**, even if its nodes and edges are precise. An explicit user request for TikZ selects **T**; an explicit request for genuine measured charts selects **C** irrespective of image-model availability. For conflicts, preserve the explicit output format and data provenance. See [routing](references/routing.md) and [TikZ workflow](references/tikz-workflow.md).
+
+## Local environment adaptation (this machine)
+
+On hosts where PaperBanana has no cloud API credentials, scientific-figure work defaults to the ZCode-orchestrated local pipeline: ZCode owns the text side (FigureSpec drafting, prompt review, visual critique) while PaperBanana acts only as a single-shot image backend via the image2-api relay; `--engine paperbanana` is not used. The full nine-step procedure, fixed paths and red lines live in [zcode-local-pipeline](references/zcode-local-pipeline.md). For mechanism figures (raster + vector hybrid), the complete production SOP — eight-step flow, raster-asset supply lines, lane-first orthogonal routing, three-tier review (AI self-audit → independent inspector → user final gate) — lives in [mechanism-figure-workflow](references/mechanism-figure-workflow.md), with trigger regression cases in [trigger-regression](references/trigger-regression.md).
 
 ## Execution and evidence
 

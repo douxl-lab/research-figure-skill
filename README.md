@@ -106,6 +106,14 @@ python research-figure/scripts/rfs.py audit --spec "$FIG" --artifact /tmp/rfs-en
 
 **PaperBanana 适配：** 已选中的候选图可由 PaperBanana 的 `skill/exchange.py vector-handoff` 导出经过哈希验证的图片、设计说明和同源 FigureSpec，供 TikZ 独立重绘时作视觉参考；不得宣称位图与 TikZ 输出一一像素一致。详见 [TikZ 工作流](research-figure/references/tikz-workflow.md)。
 
+## 无云端凭证的本地编排与机制图 SOP（v0.6.1 新增）
+
+在 PaperBanana 无云端 API 凭证的宿主机上，RFS 提供**本地编排管线**：宿主 Agent（如 ZCode）承担文本侧（FigureSpec 起草、prompt 审校、视觉评审），PaperBanana 仅作单点生图后端（image2-api 中转，`generate_from_prompt.py`），产出经 `emit_bundle.py` 组装为协议 bundle 后走正门 `reconstruction-package`。九步流程与固定路径见 [zcode-local-pipeline](research-figure/references/zcode-local-pipeline.md)。
+
+**机制图（位图+矢量结合）** 的完整制作 SOP 见 [mechanism-figure-workflow](research-figure/references/mechanism-figure-workflow.md)：八步流程（定规格 → 备素材 → 通道规划 → 面板生成 → 合并嵌图 → AI 自审 → 独立检验 → 用户终审）、位图素材产线三分法（代码渲染优先 / 生图占位 / 真实数据红线）、正交线纪律与通道规划规则、以及三轮实战沉淀的踩坑速查。配套的入口触发回归用例见 [trigger-regression](research-figure/references/trigger-regression.md)。
+
+`doctor` 自 v0.6.1 起分层报告就绪状态（declared → path_exists → static entry → 实际可调用需显式 smoke → license 许可），不再以单一 `ready` 字段虚报。
+
 ## 原生可编辑 PPTX / draw.io 验收
 
 新版 `native-audit` 用于**检查已经由真实后端生成并保存的原生文件**，不会把一张 PNG 伪装成 PPTX，也不会自动重绘批准的复杂构图。它核对可编辑文字、对象数量、连接线以及可选的稳定对象 ID。推荐在原生对象命名时使用 `rfs-node:<FigureSpec ID>` 和 `rfs-edge:<FigureSpec ID>`，并保留连接线的实际起终点和箭头。

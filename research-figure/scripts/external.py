@@ -48,7 +48,7 @@ def paperbanana_status() -> dict:
     if config_file and config_file.is_file():
         try:
             cfg_text = config_file.read_text(encoding="utf-8")
-            local_config = bool(re.search(r"^\s*(?:google_api_key|openrouter_api_key)\s*:\s*['\"]?[^'\"\s#]+", cfg_text, flags=re.M))
+            local_config = bool(re.search(r"^\s*(?:google_api_key|openrouter_api_key|openai_api_key)\s*:\s*['\"]?[^'\"\s#]+", cfg_text, flags=re.M))
         except OSError:
             pass
     image_model, model_source = _configured_image_model(root)
@@ -56,32 +56,46 @@ def paperbanana_status() -> dict:
     return {"root": str(root) if root else None,
             "script_found": path_ready,
             "credentials_present": bool(env_key_ready or local_config),
-            "ready": bool(path_ready and (env_key_ready or local_config)),
+            "configured_present": bool(path_ready and (env_key_ready or local_config)),
+            "invocation_smoke_tested": False,
+            "readiness_note": ("configured_present = entry script + credentials present "
+                               "(static check only); actual invocation requires an explicit "
+                               "smoke test, NOT covered here"),
             "configured_image_model": image_model,
             "configured_image_model_source": model_source,
             "image_model_warning": (f"{image_model} was {deprecated_reason}; update config or pass --paperbanana-image-model"
                                     if deprecated_reason else None),
             "note": "Credentials are presence-checked only, never printed or tested against provider"}
 
-
 def doctor() -> dict:
     import importlib.util
     pb = paperbanana_status()
     pf = os.environ.get("RFS_PAPERFIG_SKILL", "")
     sv = os.environ.get("RFS_SIVIA_SKILL", "")
+    sv_path = Path(sv).expanduser() if sv else None
+    pf_path = Path(pf).expanduser() if pf else None
+    def _sivia_static(p):
+        # Readiness layer 3: static entry presence only. Actually invoking the
+        # engine is a deliberate smoke test, intentionally OUT of doctor scope.
+        return {"figureguard_entry": bool(p and (p / "figureguard" / "__main__.py").is_file()),
+                "requirements_file": bool(p and (p / "requirements-figureguard.txt").is_file()),
+                "license": "NonCommercial - commercial use needs the author's written consent"}
+    def _paperfig_static(p):
+        return {"rfs_consumer_dir": bool(p and (p / "rfs_consumer").is_dir())}
     return {
         "python": sys.version.split()[0],
-        "tikz": {"xelatex": bool(shutil.which("xelatex")), "pdftocairo": bool(shutil.which("pdftocairo")),
-                 "ready": bool(shutil.which("xelatex") and shutil.which("pdftocairo"))},
         "matplotlib_available": bool(importlib.util.find_spec("matplotlib")),
         "paperbanana": pb,
         "paper_fig_skill_declared": bool(pf),
-        "paper_fig_skill_path_exists": bool(pf and Path(pf).expanduser().exists()),
+        "paper_fig_skill_path_exists": bool(pf and pf_path.exists()),
+        "paper_fig_static": _paperfig_static(pf_path) if pf_path else None,
         "sivia_skill_declared": bool(sv),
-        "sivia_skill_path_exists": bool(sv and Path(sv).expanduser().exists()),
-        "note": "Declaring an external skill path does not prove the host can invoke that skill"
+        "sivia_skill_path_exists": bool(sv and sv_path.exists()),
+        "sivia_static": _sivia_static(sv_path) if sv_path else None,
+        "readiness_layers_note": ("declared -> path_exists -> static entry present -> actually invocable "
+                                  "(explicit smoke test, NOT covered by doctor) -> license permits use. "
+                                  "A passing lower layer never implies a higher one.")
     }
-
 
 def _model_brief(spec: dict) -> str:
     nodes = spec.get("diagram", {}).get("nodes", [])
