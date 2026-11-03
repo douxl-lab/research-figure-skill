@@ -54,15 +54,13 @@ def _new_dir(path: str | Path) -> Path:
 
 
 def _peer() -> tuple[Path, str]:
-    root = os.environ.get("PAPERBANANA_ROOT", "")
-    if not root:
-        raise ValueError("Set PAPERBANANA_ROOT to the separately installed PaperBanana checkout")
+    from kernels import locate, python_for_design
+    location = locate("design")
+    if location is None or not (location / "skill/exchange.py").is_file():
+        raise ValueError("Embedded design kernel missing; install the full RFS package or set RFS_DESIGN_ROOT")
     _, interop, _ = _api()
-    location = interop.ordinary_path(root)
-    if not (location / "skill" / "exchange.py").is_file():
-        raise ValueError("Installed PaperBanana must provide skill/exchange.py (RFS Exchange v1)")
-    python = os.environ.get("PAPERBANANA_PYTHON") or sys.executable
-    return location, python
+    location = interop.ordinary_path(location)
+    return location, python_for_design()
 
 
 def _check_peer() -> dict:

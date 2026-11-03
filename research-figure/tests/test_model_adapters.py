@@ -142,7 +142,8 @@ class CurrentModelTests(unittest.TestCase):
         (pb / "configs" / "model_config.template.yaml").write_text('defaults:\n  image_gen_model_name: "gemini-3.1-flash-image-preview"\n')
         with patch.dict(os.environ, {"PAPERBANANA_ROOT": str(pb), "GOOGLE_API_KEY": "dummy-placeholder"}):
             status = paperbanana_status()
-            self.assertTrue(status["ready"])
+            self.assertTrue(status["configured_present"])
+            self.assertFalse(status["invocation_smoke_tested"])
             self.assertIn("shut down", status["image_model_warning"])
             with self.assertRaisesRegex(RFSValidationError, "shut down"):
                 call_paperbanana(self.spec, self.root / "pb_out", allow_external=True)

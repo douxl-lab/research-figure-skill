@@ -53,12 +53,12 @@ def route(spec: dict, engine: str = "auto", allow_external: bool = False) -> dic
         if engine == "paperbanana":
             if not allow_external:
                 raise RFSValidationError("PaperBanana needs explicit authorization before using --allow-external")
-            if not paperbanana_status()["ready"]:
+            if not paperbanana_status()["configured_present"]:
                 raise RFSValidationError("PaperBanana unavailable; run doctor; use prompt-only with a capable host image model")
             return {"engine": "paperbanana", "reason": "Existing multi-agent design generator, no duplicate outer planner/stylist loop", "externally_authorized": True, "degraded": False}
         if engine == "auto":
             if creative:
-                if allow_external and paperbanana_status()["ready"]:
+                if allow_external and paperbanana_status()["configured_present"]:
                     return {"engine": "paperbanana", "reason": "Creative diagram with authorized, configured PaperBanana", "externally_authorized": True, "degraded": False}
                 return {"engine": "prompt-only", "reason": "Creative-first: prepare professional prompt and design brief for host image model; do NOT substitute ugly SVG", "externally_authorized": False, "degraded": False,
                         "unmet_execution": "Image generation by a capable host / authorized provider is still pending"}

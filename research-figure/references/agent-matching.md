@@ -1,3 +1,5 @@
+> v0.8: Ordinary use follows [integrated orchestration](orchestration.md). Design/layout sources and materials are bundled under neutral kernel IDs. Named external adapters below are compatibility/optional specialist details, not a requirement for another installation.
+
 # Agent matching and delegated backend selection
 
 The **only portable auto-discovery signals** are `SKILL.md` frontmatter `name` and `description`. The body and this file load **after** activation, so do not place essential trigger conditions only here. `agents/openai.yaml` is optional host/UI metadata, not an alternative Agent Skills specification.

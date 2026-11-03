@@ -7,6 +7,8 @@ submitted to GitHub. Do not claim a regex scan proves that content is harmless.
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 import re
 import subprocess
 import sys
@@ -46,6 +48,18 @@ HIGH_CONFIDENCE = {
     "Slack token": re.compile(r"\bxox[baprs]-[A-Za-z0-9-]{25,}\b"),
 }
 MAX_SOURCE_FILE = 2 * 1024 * 1024
+
+
+def vendor_inventory(root: Path) -> dict:
+    """Allow exactly provenance-locked files, never arbitrary files under kernels/."""
+    skill = root / "research-figure"
+    lock = skill / "assets/upstreams.lock.json"
+    if not lock.exists():
+        return {}
+    from upstreams import read_lock
+    data = read_lock(skill)
+    return {"research-figure/" + item["destination"] + "/" + rel: record
+            for item in data["kernels"].values() for rel, record in item["files"].items()}
 
 
 def public_path(path: str) -> bool:
@@ -101,7 +115,23 @@ def scan_content(path: str, payload: bytes) -> list[str]:
 
 def check_paths(root: Path, paths: list[str]) -> list[str]:
     failures: list[str] = []
+    try:
+        locked = vendor_inventory(root)
+    except (ValueError, OSError) as exc:
+        return ["Invalid vendor lock: " + str(exc)]
     for rel in sorted(set(paths)):
+        if rel in locked:
+            path = root / rel
+            if path.is_symlink() or any(p.is_symlink() for p in path.parents if p != root) or not path.is_file():
+                failures.append(f"{rel}: symlink or missing locked source")
+                continue
+            raw = path.read_bytes()
+            expected = locked[rel]
+            if len(raw) != expected["bytes"] or hashlib.sha256(raw).hexdigest() != expected["sha256"]:
+                failures.append(f"{rel}: upstream inventory mismatch")
+            elif path.suffix.lower() in {".py", ".md", ".txt", ".json", ".yaml", ".yml", ".svg"} or path.name in {"LICENSE", "NOTICE"}:
+                failures.extend(scan_content(rel, raw))
+            continue
         if not public_path(rel):
             failures.append(f"{rel}: forbidden tracked path or file extension")
             continue
@@ -111,6 +141,15 @@ def check_paths(root: Path, paths: list[str]) -> list[str]:
             continue
         failures.extend(scan_content(rel, path.read_bytes()))
     return failures
+
+
+def check_tracked_inventory(root: Path, paths: list[str]) -> list[str]:
+    """A working directory may hide ignored required files; the Git index may not."""
+    try:
+        missing = sorted(set(vendor_inventory(root)) - set(paths))
+    except (ValueError, OSError) as exc:
+        return ["Invalid vendor lock: " + str(exc)]
+    return [f"{rel}: locked source is not tracked by Git" for rel in missing]
 
 
 def git_tracked(root: Path) -> list[str]:
@@ -136,6 +175,8 @@ def main() -> int:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2
     problems = check_paths(root, files)
+    if args.tracked:
+        problems.extend(check_tracked_inventory(root, files))
     if problems:
         for problem in problems:
             print("BLOCK: " + problem, file=sys.stderr)

@@ -1,3 +1,5 @@
+> v0.8: Ordinary use follows [integrated orchestration](orchestration.md). Design/layout sources and materials are bundled under neutral kernel IDs. Named external adapters below are compatibility/optional specialist details, not a requirement for another installation.
+
 **Canonical routing:** FigureSpec Exchange v1 diagrams default to PaperBanana when explicitly authorized and protocol-paired, otherwise to prompt-only. The new **explicit** `--engine tikz` route builds local, source-preserving vector diagrams without any model/API call. It does not automatically replace creative diagrams or attempt to reproduce a PaperBanana image pixel for pixel. Canonical v1 numerical plots always use the original data; hybrids remain split. Do not route a canonical complex diagram to legacy SVG automatically. See [TikZ workflow](tikz-workflow.md) and [canonical-exchange](canonical-exchange.md). Below: legacy v0.1 routing detail.
 
 # FigureRouter: A/C 双主路线，B 按需使用
