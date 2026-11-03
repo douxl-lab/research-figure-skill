@@ -1,0 +1,37 @@
+name: Review original PaperBanana history
+on:
+  push:
+    branches: ['research/original-paperbanana-review-20261103']
+permissions:
+  contents: read
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          repository: dwzhu-pku/PaperBanana
+          ref: dafc2d41c10395c8bc37faad26836070fef0add8
+          path: original
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Snapshot original public Git history and sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reviews
+          git -C original bundle create "$GITHUB_WORKSPACE/reviews/original.bundle" HEAD
+          git -C original rev-parse HEAD > reviews/original.sha
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          p=Path('reviews/original.bundle')
+          print('Original source bundle: size', p.stat().st_size,'sha256',hashlib.sha256(p.read_bytes()).hexdigest())
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: original-paperbanana-20261103
+          path: reviews/
+          if-no-files-found: error
+          retention-days: 2
