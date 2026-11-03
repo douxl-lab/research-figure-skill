@@ -1,4 +1,6 @@
 interface:
   display_name: "Research Figure Studio"
-  short_description: "Publication figure routing, source plots and scientific audits"
-  default_prompt: "Use $research-figure to create a publication figure from my verified method or data, choose the appropriate rendering route, and report actual validation and pending reviews."
+  short_description: "Integrated scientific figures, native design and source audits"
+  default_prompt: "Use $research-figure to create or revise my scientific figure. Automatically load the bundled PaperBanana and CVPR-Figure modules when relevant, execute available authorized tools without requiring backend names, and report actual artifacts and pending reviews."
+policy:
+  allow_implicit_invocation: true
