@@ -15,7 +15,7 @@ jobs:
       matrix:
         python-version: ['3.10', '3.12', '3.13']
     env:
-      PAPERBANANA_ROOT: ${{ github.workspace }}/_peer/paperbanana
+      PAPERBANANA_ROOT: ${{ github.workspace }}/research-figure/kernels/design
     steps:
       - uses: actions/checkout@v5
         with:
@@ -23,12 +23,6 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: actions/checkout@v5
-        with:
-          repository: douxl-lab/PaperBanana
-          ref: main
-          path: _peer/paperbanana
-          persist-credentials: false
       - name: Install canonical exchange dependencies
         run: python -m pip install -r research-figure/requirements-exchange.txt -r research-figure/requirements-plot.txt -r research-figure/requirements-native-qa.txt
       - name: Validate open Agent Skills specification (reference implementation)
@@ -38,6 +32,8 @@ jobs:
           skills-ref validate research-figure
       - name: Validate Agent Skill package
         run: python research-figure/scripts/check_skill.py
+      - name: Verify embedded source integrity
+        run: python research-figure/scripts/upstreams.py verify
       - name: Scan tracked files for secrets and private developer state
         run: python research-figure/scripts/check_repository.py --root . --tracked
       - name: Run offline unit/regression tests
@@ -47,3 +43,13 @@ jobs:
           python research-figure/scripts/rfs.py --help > /dev/null
           python research-figure/scripts/rfs.py doctor > /dev/null
           python -m compileall -q research-figure/scripts
+      - name: Exercise real embedded kernels offline
+        run: python research-figure/scripts/smoke_kernels.py
+      - name: Build complete installable package
+        run: python research-figure/scripts/build_package.py --out /tmp/research-figure-0.8.0.zip
+      - uses: actions/upload-artifact@v4
+        if: matrix.python-version == '3.12'
+        with:
+          name: research-figure-0.8.0
+          path: /tmp/research-figure-0.8.0.zip
+          retention-days: 14

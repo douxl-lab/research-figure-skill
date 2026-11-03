@@ -1,15 +1,50 @@
 {
-  "format": "rfs-capabilities/1.0",
-  "reviewed_at": "2026-11-03",
-  "purpose": "Executable orchestration plus bundled operating guides; not a declaration that external runtimes are installed.",
+  "format": "rfs-capabilities/2.0",
+  "version": "0.8.0",
+  "upstream_lock": "assets/upstreams.lock.json",
   "modules": [
-    {"id": "paperbanana", "role": "default scientific diagram design", "guide": "references/paperbanana-delegation.md", "modes": ["native-host", "authorized-provider", "labelled-bundled-host-fallback"], "repository": "https://github.com/douxl-lab/PaperBanana", "revision": "1937a4a6701a76cd01724d359797bb14e2a93e17", "directory": "PaperBanana", "license": "Apache-2.0", "entrypoints": ["skill/native_host.py", "skill/exchange.py"]},
-    {"id": "cvpr-figure", "role": "reference library, editable-vector renderer and file audits", "guide": "references/cvpr-figure-library.md", "repository": "https://github.com/ChizkiyahuOhayon/CVPR-Figure", "revision": "8adb0d6b881ed0c8643657ccd1b2f43258d4a3d1", "directory": "CVPR-Figure", "license": "MIT", "entrypoints": ["scripts/render.py", "scripts/validate.py"]},
-    {"id": "tikz", "role": "explicit precise vector/math source", "guide": "references/tikz-workflow.md", "distribution": "bundled RFS renderer; separate XeLaTeX/Poppler runtime"},
-    {"id": "matplotlib", "role": "source-data plots only", "guide": "references/recipes.md", "distribution": "bundled RFS plotting adapters; separate Matplotlib dependency"},
-    {"id": "paper-fig", "role": "approved-reference native editable reconstruction", "guide": "references/reconstruction.md", "repository": "https://github.com/yejy53/Editable-Design", "distribution": "optional installed specialist; do not auto-vendor or assume its runtime/license"},
-    {"id": "sivia", "role": "optional native reviewer/editor", "guide": "references/integrations.md", "repository": "https://github.com/exsinger-hub/Sivia", "distribution": "optional only; review noncommercial restrictions before use or redistribution"}
-  ],
-  "default_order": ["source contract", "CVPR-Figure reference selection", "PaperBanana native host or authorized provider", "actual image review", "requested vector/native reconstruction", "actual exported-file audit"],
-  "rules": ["Real data never enters a generative plotter", "Host tool access is observed, not inferred", "No duplicate five-agent loop", "A prepared job or prompt is not a rendered figure", "Runtime pins are reproducibility records, not a security certification"]
+    {
+      "id": "design",
+      "role": "source-grounded five-stage creative design",
+      "guide": "references/design-core.md",
+      "runtime": "kernels/design",
+      "entry": "scripts/kernel.py",
+      "modes": [
+        "design-native",
+        "design-provider"
+      ]
+    },
+    {
+      "id": "layout",
+      "role": "local template/gallery library, vector export and audits",
+      "guide": "references/layout-library.md",
+      "runtime": "kernels/layout",
+      "entry": "scripts/library.py",
+      "mode": "layout"
+    },
+    {
+      "id": "vector",
+      "role": "explicit TikZ/math vector source",
+      "guide": "references/tikz-workflow.md",
+      "entry": "scripts/tikz_renderer.py"
+    },
+    {
+      "id": "plot",
+      "role": "real source data only",
+      "guide": "references/recipes.md",
+      "entry": "scripts/plotting.py"
+    },
+    {
+      "id": "reconstruction",
+      "role": "approved-reference native editing",
+      "guide": "references/reconstruction.md",
+      "entry": "scripts/emit_bundle.py"
+    },
+    {
+      "id": "audit",
+      "role": "science, real bytes, native objects and exports",
+      "guide": "references/quality-gates.md",
+      "entry": "scripts/native_qa.py"
+    }
+  ]
 }

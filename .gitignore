@@ -186,3 +186,30 @@ id_ed25519*
 
 # Reproducible offline CI peer checkout is runtime-only
 /_peer/
+# Local additions (v0.6.1)
+configs/
+.skill-lock.json
+_*_tmp/
+_*.[jp]p[g]?
+# scratch scripts & evidence crops produced during development
+_*.py
+_*.png
+
+# Reviewed source-only kernels. The lock-bound scanner, not this ignore file,
+# authorizes their exact bytes. Do not admit .env, actual provider configs or caches.
+!research-figure/kernels/design/configs/
+!research-figure/kernels/design/configs/model_config.template.yaml
+!research-figure/kernels/design/configs/model_registry.yaml
+!research-figure/kernels/layout/assets/
+!research-figure/kernels/layout/assets/gallery/
+!research-figure/kernels/layout/assets/gallery/*.png
+!research-figure/kernels/layout/templates/*.pptx
+!research-figure/kernels/layout/templates/*.vsdx
+!research-figure/kernels/layout/templates/*.svg
+research-figure/kernels/.sync-*/
+research-figure/kernels/.upstream-sync.lock
+research-figure/assets/.upstreams.lock.new
+
+# Upstream package initializers/metrics are source, not local scratch scripts.
+!research-figure/kernels/design/**/_*.py
+!research-figure/kernels/layout/**/_*.py

@@ -42,7 +42,7 @@ class AgentSkillContractTests(unittest.TestCase):
         self.assertTrue(all(isinstance(c["prompt"], str) and c["prompt"].strip() and
                             isinstance(c["activate"], bool) and c["expected_route"] for c in cases))
 
-    @patch("rfs.paperbanana_status", return_value={"ready": True})
+    @patch("rfs.paperbanana_status", return_value={"configured_present": True, "invocation_smoke_tested": False})
     def test_exact_mode_is_not_overridden_by_available_ai(self, status):
         spec, report = load_and_validate(EXACT)
         self.assertTrue(report["valid"])
@@ -50,7 +50,7 @@ class AgentSkillContractTests(unittest.TestCase):
         self.assertEqual("native-svg", outcome["engine"])
         status.assert_not_called()
 
-    @patch("rfs.paperbanana_status", return_value={"ready": True})
+    @patch("rfs.paperbanana_status", return_value={"configured_present": True, "invocation_smoke_tested": False})
     def test_creative_mode_uses_external_only_when_authorized(self, status):
         spec, _ = load_and_validate(ARCH)
         spec["generation"] = {"intent": "creative"}

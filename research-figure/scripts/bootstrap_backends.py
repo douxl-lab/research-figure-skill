@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
-"""Materialize pinned public engines; never run their code or install packages."""
-from __future__ import annotations
+"""Legacy source installer; embedded kernels are now the default.
 
+Use upstreams.py check/pull to update embedded kernels. This compatibility command
+only materializes optional separate source checkouts; it installs no dependencies.
+"""
+from __future__ import annotations
 import argparse
 import json
 import os
@@ -9,73 +12,63 @@ import re
 import subprocess
 import tempfile
 from pathlib import Path
-
+from upstreams import read_lock
 ROOT = Path(__file__).resolve().parents[1]
 
 
 def install(entry: dict, destination: Path, *, allow_network: bool = False) -> dict:
     if not allow_network:
-        raise ValueError("Backend download requires explicit --allow-network")
-    revision = entry["revision"]
-    repository = entry["repository"]
+        raise ValueError("Source download requires explicit --allow-network")
+    revision, repository = entry["revision"], entry["repository"]
     directory = entry["directory"]
-    if not re.fullmatch(r"[0-9a-f]{40}", revision):
-        raise ValueError("Use an exact 40-character commit, never a floating branch")
-    if not re.fullmatch(r"https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository):
-        raise ValueError("Only pinned public GitHub repositories are supported")
-    if directory not in {"PaperBanana", "CVPR-Figure"}:
-        raise ValueError("Unknown backend directory")
+    if not re.fullmatch(r"[0-9a-f]{40}", revision) or not re.fullmatch(r"https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository):
+        raise ValueError("Expected pinned public HTTPS GitHub source")
+    if directory not in {"design", "layout", "PaperBanana", "CVPR-Figure"}:
+        raise ValueError("Unknown source directory")
     destination = destination.expanduser().resolve()
     target = destination / directory
     if target.exists():
-        raise ValueError(f"Refusing to overwrite existing checkout: {target}")
+        raise ValueError("Refusing to overwrite an existing checkout")
     destination.mkdir(parents=True, exist_ok=True)
     env = dict(os.environ, GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull,
                GIT_TERMINAL_PROMPT="0", GIT_LFS_SKIP_SMUDGE="1")
-    # Fresh, temporary checkout; no user Git templates/hooks/filters are used.
     with tempfile.TemporaryDirectory(prefix=".rfs-fetch-", dir=destination) as temporary:
-        staging = Path(temporary) / "repo"
+        stage = Path(temporary) / "source"
         empty = Path(temporary) / "empty"
         empty.mkdir()
         base = ["git", "-c", f"core.hooksPath={empty}", "-c", f"init.templateDir={empty}"]
-        def git(*args: str) -> str:
-            p = subprocess.run(base + list(args), env=env, text=True, capture_output=True, timeout=180, check=False)
+        def git(*args):
+            p = subprocess.run(base + list(args), env=env, capture_output=True, text=True, timeout=180)
             if p.returncode:
-                raise ValueError("Pinned checkout failed; check network/Git access. No backend code was run")
+                raise ValueError("Pinned source checkout failed; no source code was executed")
             return p.stdout.strip()
-        git("init", str(staging))
-        git("-C", str(staging), "remote", "add", "origin", repository + ".git")
-        git("-C", str(staging), "fetch", "--depth", "1", "origin", revision)
-        if git("-C", str(staging), "rev-parse", "FETCH_HEAD") != revision:
+        git("init", str(stage))
+        git("-C", str(stage), "fetch", "--depth", "1", repository + ".git", revision)
+        if git("-C", str(stage), "rev-parse", "FETCH_HEAD") != revision:
             raise ValueError("Fetched revision mismatch")
-        git("-C", str(staging), "checkout", "--detach", revision)
-        if not (staging / "LICENSE").is_file():
-            raise ValueError("Upstream LICENSE missing; do not redistribute an unreviewed snapshot")
-        if not all((staging / path).is_file() for path in entry["entrypoints"]):
-            raise ValueError("Pinned checkout is missing expected entrypoints")
-        if target.exists():
-            raise ValueError("Destination appeared during download; refusing replacement")
-        staging.rename(target)
-    return {"id": entry["id"], "path": str(target), "revision": revision,
-            "status": "SOURCE_INSTALLED_RUNTIME_NOT_VERIFIED"}
+        git("-C", str(stage), "checkout", "--detach", revision)
+        if not (stage / "LICENSE").is_file():
+            raise ValueError("Missing license")
+        stage.rename(target)
+    return {"path": str(target), "revision": revision, "status": "SOURCE_INSTALLED_RUNTIME_NOT_VERIFIED"}
 
 
-def main() -> int:
+def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--backend", choices=("paperbanana", "cvpr-figure", "all"), default="all")
-    p.add_argument("--destination", required=True, type=Path)
+    p.add_argument("--backend", choices=["design", "layout", "paperbanana", "cvpr-figure", "all"], default="all")
+    p.add_argument("--destination", type=Path, required=True)
     p.add_argument("--allow-network", action="store_true")
-    args = p.parse_args()
-    completed = []
+    a = p.parse_args()
+    selected = {"paperbanana":"design", "cvpr-figure":"layout"}.get(a.backend, a.backend)
+    results = []
     try:
-        catalog = json.loads((ROOT / "assets/capabilities.json").read_text(encoding="utf-8"))
-        for entry in catalog["modules"]:
-            if entry["id"] in {"paperbanana", "cvpr-figure"} and args.backend in {"all", entry["id"]}:
-                completed.append(install(entry, args.destination, allow_network=args.allow_network))
-        print(json.dumps({"installed": completed, "next": "Review upstream runtime requirements; no package installation or provider authorization was performed"}, indent=2))
+        for name, entry in read_lock(ROOT)["kernels"].items():
+            if selected in {"all", name}:
+                results.append(install(dict(entry, directory=name), a.destination, allow_network=a.allow_network))
+        print(json.dumps({"installed":results, "notice":"Embedded kernels already ship; use upstreams.py for their updates"}, indent=2))
         return 0
-    except (OSError, ValueError, subprocess.TimeoutExpired) as exc:
-        print(json.dumps({"status": "FAILED_OR_PARTIAL", "installed": completed, "error": str(exc)}, indent=2))
+    except (ValueError, OSError, subprocess.TimeoutExpired) as exc:
+        print(json.dumps({"status":"BLOCKED_OR_PARTIAL", "completed":results, "error":str(exc)}))
         return 2
 
 

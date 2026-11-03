@@ -14,9 +14,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from kernels import ALIASES, discover, python_for_design
+
 ROOT = Path(__file__).resolve().parents[1]
-MODES = ("auto", "paperbanana-native", "paperbanana-provider", "tikz",
-         "plot-matplotlib", "prompt-only", "cvpr-figure", "native-svg")
+MODES = ("auto", "design-native", "design-provider", "tikz",
+         "plot-matplotlib", "prompt-only", "layout", "native-svg")
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -26,28 +28,10 @@ def read_json(path: Path) -> dict[str, Any]:
     return value
 
 
-def discover(root: Path = ROOT, backend_dir: Path | None = None,
-             environ: dict[str, str] | None = None) -> dict[str, dict[str, Any]]:
-    """Only discover known filenames. Presence is NOT runtime compatibility."""
-    env = os.environ if environ is None else environ
-    result = {}
-    for name, variable in (("PaperBanana", "PAPERBANANA_ROOT"),
-                           ("CVPR-Figure", "CVPR_FIGURE_ROOT")):
-        explicit = env.get(variable)
-        bases = ([backend_dir] if backend_dir else []) + [root / "backends", root.parent, root.parent.parent]
-        candidates = [Path(explicit).expanduser()] if explicit else [p / name for p in bases]
-        selected = next((p.resolve() for p in candidates if p.is_dir()), None)
-        files = ("skill/native_host.py", "skill/exchange.py") if name == "PaperBanana" else ("scripts/render.py", "scripts/validate.py")
-        result[name] = {"root": str(selected) if selected else None,
-                        "configured": bool(explicit),
-                        "files": {f: bool(selected and (selected / f).is_file()) for f in files},
-                        "runtime_verified": False}
-    return result
-
-
 def make_plan(spec: dict[str, Any], capabilities: dict[str, dict[str, Any]], *,
               mode: str = "auto", host_image_tool: str | None = None,
               allow_external: bool = False) -> dict[str, Any]:
+    mode = ALIASES.get(mode, mode)
     if mode not in MODES:
         raise ValueError(f"Unknown mode: {mode}")
     canonical = spec.get("schema_version") == "1.0.0"
@@ -55,8 +39,14 @@ def make_plan(spec: dict[str, Any], capabilities: dict[str, dict[str, Any]], *,
     if kind not in {"diagram", "plot", "architecture", "quantitative", "hybrid",
                     "editable_reconstruction", "evidence_panel"}:
         raise ValueError("Unknown figure kind; validate FigureSpec before orchestration")
-    pb = capabilities["PaperBanana"]
-    cv = capabilities["CVPR-Figure"]
+    # v0.7 capability maps remain readable; new outputs use neutral kernel IDs.
+    capabilities = dict(capabilities)
+    for alias, name in (("PaperBanana", "design"), ("CVPR-Figure", "layout")):
+        if name not in capabilities and alias in capabilities:
+            capabilities[name] = capabilities[alias]
+        capabilities.pop(alias, None)
+    pb = capabilities["design"]
+    cv = capabilities["layout"]
     plan: dict[str, Any] = {
         "format": "rfs-workflow/1.0", "status": "PLANNED_NOT_EXECUTED",
         "mode": None, "capabilities": capabilities,
@@ -75,32 +65,32 @@ def make_plan(spec: dict[str, Any], capabilities: dict[str, dict[str, Any]], *,
         plan.update(mode="source-preserving-handoff", status="HOST_ACTION_REQUIRED")
         plan["references"].extend(["references/reconstruction.md", "references/quality-gates.md"])
     else:
-        plan["references"].extend(["references/core-capabilities.md", "references/cvpr-figure-library.md"])
+        plan["references"].extend(["references/core-capabilities.md", "references/layout-library.md"])
         if mode == "auto":
             if not canonical and spec.get("generation", {}).get("intent") == "exact":
                 mode = "native-svg"
             elif host_image_tool:
-                mode = "paperbanana-native" if canonical and pb["files"]["skill/native_host.py"] else "bundled-host-workflow"
+                mode = "design-native" if canonical and pb["files"]["skill/native_host.py"] else "bundled-host-workflow"
             elif allow_external and pb["files"]["skill/exchange.py"]:
-                mode = "paperbanana-provider"
+                mode = "design-provider"
             else:
                 mode = "blocked"
-                plan["blockers"].append("No host image tool declared and no authorized PaperBanana runtime; do not stop at a prompt or substitute plain boxes")
-        if mode == "paperbanana-native":
+                plan["blockers"].append("No host image tool declared and no authorized design runtime; do not stop at a prompt or substitute plain boxes")
+        if mode == "design-native":
             if not canonical:
                 plan["blockers"].append("Native host requires canonical FigureSpec v1; do not silently convert legacy evidence")
             if not host_image_tool:
                 plan["blockers"].append("An actual host image tool must be available; a CLI coordinator cannot generate images")
             if not pb["files"]["skill/native_host.py"]:
-                plan["blockers"].append("PaperBanana native_host.py missing; install the pinned runtime or use the labelled bundled host workflow")
-        elif mode == "paperbanana-provider":
+                plan["blockers"].append("Design native coordinator missing; install the pinned runtime or use the labelled bundled host workflow")
+        elif mode == "design-provider":
             if not allow_external:
                 plan["blockers"].append("Provider disclosure/cost authorization missing")
             if not pb["files"]["skill/exchange.py"]:
-                plan["blockers"].append("PaperBanana exchange.py missing")
-        elif mode == "cvpr-figure":
+                plan["blockers"].append("Design exchange entry missing")
+        elif mode == "layout":
             if not all(cv["files"].values()):
-                plan["blockers"].append("CVPR-Figure renderer/validator missing")
+                plan["blockers"].append("Layout renderer/validator missing")
         elif mode == "plot-matplotlib":
             raise ValueError("plot-matplotlib requires measured plot data")
         elif mode == "native-svg" and canonical:
@@ -108,8 +98,8 @@ def make_plan(spec: dict[str, Any], capabilities: dict[str, dict[str, Any]], *,
         elif mode == "tikz" and not canonical:
             plan["blockers"].append("TikZ requires canonical FigureSpec v1")
         plan["mode"] = mode
-        if mode in {"paperbanana-native", "paperbanana-provider", "bundled-host-workflow"}:
-            plan["references"].append("references/paperbanana-delegation.md")
+        if mode in {"design-native", "design-provider", "bundled-host-workflow"}:
+            plan["references"].append("references/design-core.md")
         if mode == "tikz":
             plan["references"].append("references/tikz-workflow.md")
     if plan["blockers"]:
@@ -140,33 +130,35 @@ def _invoke(command: list[str], *, cwd: Path, env: dict[str, str], timeout: int,
 
 def execute(plan: dict[str, Any], spec: Path, out: Path, *, root: Path = ROOT,
             candidates: int = 2, timeout: int = 1800,
-            cvpr_spec: Path | None = None) -> dict[str, Any]:
+            cvpr_spec: Path | None = None, layout_spec: Path | None = None) -> dict[str, Any]:
     if plan["status"] == "BLOCKED":
         raise ValueError("; ".join(plan["blockers"]))
-    if candidates < 1 or timeout < 1:
-        raise ValueError("candidates and timeout must be positive")
+    if not 1 <= candidates <= 8 or not 1 <= timeout <= 7200:
+        raise ValueError("candidates must be 1..8 and timeout 1..7200")
     root, spec, out = root.resolve(), spec.resolve(), out.resolve()
     if out == root or root in out.parents:
         raise ValueError("Job output must be outside the installed Skill")
     if out.exists():
         raise ValueError("A fresh output directory is required; never overwrite a prior figure")
-    mode = plan["mode"]
-    if mode == "cvpr-figure" and (cvpr_spec is None or not cvpr_spec.is_file()):
-        raise ValueError("Supply a reviewed --cvpr-spec; CVPR YAML is NOT FigureSpec v1")
+    mode = ALIASES.get(plan["mode"], plan["mode"])
+    cvpr_spec = layout_spec or cvpr_spec
+    if mode == "layout" and (cvpr_spec is None or not cvpr_spec.is_file()):
+        raise ValueError("Supply a reviewed --layout-spec; layout YAML is NOT FigureSpec v1")
     env = dict(os.environ)
-    pb_root = plan["capabilities"]["PaperBanana"]["root"]
+    pb_root = plan["capabilities"]["design"]["root"]
     if pb_root:
+        env["RFS_DESIGN_ROOT"] = pb_root
         env["PAPERBANANA_ROOT"] = pb_root
     rfs = [sys.executable, str(root / "scripts/rfs.py")]
     validation = _invoke(rfs + ["validate", "--spec", str(spec)], cwd=spec.parent, env=env, timeout=60)
-    if validation.get("valid") is False or validation.get("status") in {"INVALID", "FAIL", "FAILED"}:
+    if validation.get("valid") is not True:
         raise ValueError("FigureSpec validation failed")
     out.mkdir(parents=True, exist_ok=False)
     (out / "workflow-plan.json").write_text(json.dumps(plan, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     try:
-        if mode == "paperbanana-native":
+        if mode == "design-native":
             pb = Path(pb_root)
-            native = [env.get("PAPERBANANA_PYTHON") or sys.executable, str(pb / "skill/native_host.py")]
+            native = [python_for_design(), str(pb / "skill/native_host.py")]
             job = out / "native-job"
             _invoke(native + ["prepare", "--spec", str(spec), "--job", str(job)], cwd=pb, env=env, timeout=60)
             task = _invoke(native + ["next", "--job", str(job)], cwd=pb, env=env, timeout=60)
@@ -175,23 +167,28 @@ def execute(plan: dict[str, Any], spec: Path, out: Path, *, root: Path = ROOT,
         elif mode in {"bundled-host-workflow", "source-preserving-handoff"}:
             result = {"status": "HOST_ACTION_REQUIRED", "mode": mode,
                       "references": plan["references"], "scientific_spec": str(spec),
-                      "instruction": "Read the bundled module and execute real host tools; do not report a PaperBanana runtime execution"}
-        elif mode == "cvpr-figure":
-            cv = Path(plan["capabilities"]["CVPR-Figure"]["root"])
+                      "instruction": "Read the bundled module and execute real host tools; do not report a design runtime execution"}
+        elif mode == "layout":
+            cv = Path(plan["capabilities"]["layout"]["root"])
             prefix = out / "figure"
             render = _invoke([sys.executable, str(cv / "scripts/render.py"), str(cvpr_spec.resolve()),
                               "-o", str(prefix), "-f", "svg,pptx,vsdx"], cwd=cvpr_spec.resolve().parent, env=env, timeout=timeout, require_json=False)
             audit = _invoke([sys.executable, str(cv / "scripts/validate.py"), str(cvpr_spec.resolve()),
-                             "--svg", str(prefix.with_suffix(".svg"))], cwd=cvpr_spec.resolve().parent, env=env, timeout=60, require_json=False)
+                             "--svg", str(prefix.with_suffix(".svg")), "--json"], cwd=cvpr_spec.resolve().parent, env=env, timeout=60)
             files = [str(prefix.with_suffix("." + ext)) for ext in ("svg", "pptx", "vsdx")]
             if not all(Path(p).is_file() and Path(p).stat().st_size for p in files):
-                raise ValueError("CVPR-Figure did not produce all requested files")
+                raise ValueError("Layout kernel did not produce all requested files")
+            import hashlib
+            for name, source in (("figure-spec.json", spec), ("layout-spec.yaml", cvpr_spec)):
+                (out / name).write_bytes(source.read_bytes())
             result = {"status": "GENERATED_UNREVIEWED", "mode": mode, "artifacts": files,
+                      "artifact_sha256": {Path(f).name: hashlib.sha256(Path(f).read_bytes()).hexdigest() for f in files},
+                      "layout_spec_sha256": hashlib.sha256(cvpr_spec.read_bytes()).hexdigest(),
                       "render": render, "audit": audit, "scientific_and_visual_review": "PENDING"}
         else:
-            engine = "paperbanana" if mode == "paperbanana-provider" else mode
+            engine = "paperbanana" if mode == "design-provider" else mode
             command = rfs + ["run", "--spec", str(spec), "--out", str(out / "rendered"), "--engine", engine]
-            if mode == "paperbanana-provider":
+            if mode == "design-provider":
                 command += ["--allow-external", "--candidates", str(candidates), "--timeout", str(timeout)]
             backend_result = _invoke(command, cwd=spec.parent, env=env, timeout=timeout + 30)
             result = {"status": backend_result.get("status", "BACKEND_RETURNED_REVIEW_REQUIRED"),
@@ -209,11 +206,11 @@ def main() -> int:
     parser.add_argument("action", choices=("plan", "run", "doctor"))
     parser.add_argument("--spec", type=Path)
     parser.add_argument("--out", type=Path)
-    parser.add_argument("--backend-dir", type=Path, help="Parent of pinned PaperBanana and CVPR-Figure checkouts")
-    parser.add_argument("--mode", choices=MODES, default="auto")
+    parser.add_argument("--backend-dir", type=Path, help="Explicit parent of design/layout kernel overrides; bundled kernels are the default")
+    parser.add_argument("--mode", default="auto", metavar="MODE", help=", ".join(MODES))
     parser.add_argument("--host-image-tool", help="Actual available host tool name; never infer one from installed packages")
     parser.add_argument("--allow-external", action="store_true", help="Only after task/service-specific disclosure and cost authorization")
-    parser.add_argument("--cvpr-spec", type=Path)
+    parser.add_argument("--layout-spec", "--cvpr-spec", dest="layout_spec", type=Path)
     parser.add_argument("--candidates", type=int, default=2)
     parser.add_argument("--timeout", type=int, default=1800)
     args = parser.parse_args()
@@ -234,7 +231,7 @@ def main() -> int:
                 if args.out is None:
                     raise ValueError("--out is required")
                 result = execute(plan, args.spec, args.out, candidates=args.candidates,
-                                 timeout=args.timeout, cvpr_spec=args.cvpr_spec)
+                                 timeout=args.timeout, layout_spec=args.layout_spec)
         print(json.dumps(result, indent=2, ensure_ascii=False))
         return 2 if result.get("status") == "BLOCKED" else 0
     except (ValueError, OSError) as exc:

@@ -1,0 +1,18 @@
+# Synthetic integration fixture only: no measured outputs or original research.
+figure: {id: synthetic-encoder-fixture, width: double, font: helvetica}
+layout: row
+gap: 24
+panels:
+  - id: fixture
+    title: "Synthetic integration fixture"
+    body:
+      - row:
+          gap: 24
+          body:
+            - {id: input, text: "Input features", role: input}
+            - {id: encoder, text: "Encoder", role: encoder}
+            - {id: embedding, text: "Embedding", role: output}
+edges:
+  - {from: input, to: encoder}
+  - {from: encoder, to: embedding}
+caption: "Synthetic software integration fixture, not a scientific result. Input features are processed by an encoder to produce an embedding."
