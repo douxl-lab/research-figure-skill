@@ -1,6 +1,6 @@
 # Portable host-local image pipeline
 
-Integrated from contributor PR #1. Host reasoning owns source reading, FigureSpec, prompt review and actual-image critique. An explicitly selected image service renders candidates. This replaces the old machine-specific paths/default relay without losing the local workflow.
+Host reasoning owns source reading, FigureSpec, prompt review and actual-image critique. An explicitly selected image service renders candidates. This replaces the old machine-specific paths/default relay without losing the local workflow.
 
 1. Read the complete relevant source; produce canonical v1 FigureSpec.
 2. Validate with `rfs.py validate --spec ...`.

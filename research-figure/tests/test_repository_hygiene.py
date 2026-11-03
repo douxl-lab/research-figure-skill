@@ -64,7 +64,7 @@ class RepositoryPrivacyTests(unittest.TestCase):
                 r=subprocess.run(["git", "-C", str(p), "check-ignore", "-q", path],check=False)
                 with self.subTest(path=path):
                     self.assertEqual(r.returncode,0)
-            for path in ("SKILL.md", "README.md", "references/routing.md", "agents/openai.yaml"):
+            for path in ("research-figure/SKILL.md", "README.md", "research-figure/references/routing.md", "research-figure/agents/openai.yaml"):
                 r=subprocess.run(["git", "-C", str(p), "check-ignore", "-q", path],check=False)
                 with self.subTest(path=path):
                     self.assertEqual(r.returncode,1)

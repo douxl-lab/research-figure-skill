@@ -1,6 +1,6 @@
 # Mechanism figure production SOP
 
-Integrated from contributor PR #1, with machine-specific paths and tool assumptions separated. The useful production discipline is retained: assets first, connection lanes before drawing, native structure plus justified raster content, and inspection of final saved files.
+Portable production discipline: assets first, connection lanes before drawing, native structure plus justified raster content, and inspection of final saved files.
 
 ## Eight steps
 

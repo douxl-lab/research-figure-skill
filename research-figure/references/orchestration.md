@@ -1,6 +1,6 @@
 # Unified kernel orchestration
 
-## Persistent project decisions
+## Public workflow contract
 
 `research-figure` is the only ordinary Skill entry. Internal capabilities are `design`, `layout`, `vector`, `plot`, `reconstruction` and `audit`. Users should describe the figure, not list implementation brands. The design/layout code, local template specs, gallery and export/audit scripts are installed with the Skill. Original project names remain in provenance, licenses and deprecated compatibility aliases; renaming our interface is not claiming authorship of upstream code.
 
@@ -16,6 +16,6 @@ Default mode order: native design with available host image tool → labelled ho
 
 `run` returning `HOST_ACTION_REQUIRED` means the host must continue the coordinator. Native receipts are local attestations, not signatures; prompt intent is not evidence of exact provider submission when a tool hides its prompt. Real image bytes and science remain separately reviewed. A host tool may end the turn; later review is then pending, never fabricated.
 
-The contributor's local single-shot route, bound bundle emitter and lane-first production SOP remain available. They are not a machine-specific override of the portable default. Unknown native editor availability or licensing stays a blocker. A partially rasterized presentation is labelled partial editability, not fully editable.
+The local single-shot route, bound bundle emitter and lane-first production SOP remain available. They are not a machine-specific override of the portable default. Unknown native editor availability or licensing stays a blocker. A partially rasterized presentation is labelled partial editability, not fully editable.
 
 Read `upstream-maintenance.md` for dependency updates. Installation includes code/assets, not model credentials, SDKs, system converters or proprietary editors. A metadata setting such as implicit invocation helps selection; it does not guarantee host behavior. Offline dispatch tests are not a live host invocation benchmark.

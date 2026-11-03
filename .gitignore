@@ -1,17 +1,43 @@
-# Research Figure Studio: deny local and confidential state by default.
-# Git ignores only UNTRACKED files; after a previous commit, run:
-#   git rm --cached <path>
-# A separate tracked-file safeguard runs in CI.
+# Research Figure Studio — public source only.
+# Ignore rules do not remove already tracked files. Before committing, run:
+#   python research-figure/scripts/check_repository.py --root . --tracked
+# Keep private research, live jobs, editor settings and credentials OUTSIDE this repo.
 
-# Python virtual environments, dependencies and caches
+# Root and package layout: reject unreviewed top-level additions.
+/*
+!/.gitignore
+!/.gitattributes
+!/README.md
+!/LICENSE
+!/THIRD_PARTY_NOTICES.md
+!/.github/
+!/research-figure/
+/.github/*
+!/.github/workflows/
+/.github/workflows/*
+!/.github/workflows/ci.yml
+/research-figure/*
+!/research-figure/LICENSE
+!/research-figure/agents/
+!/research-figure/assets/
+!/research-figure/kernels/
+!/research-figure/protocol/
+!/research-figure/references/
+!/research-figure/scripts/
+!/research-figure/tests/
+/research-figure/agents/*
+!/research-figure/agents/openai.yaml
+/research-figure/kernels/*
+!/research-figure/kernels/design/
+!/research-figure/kernels/layout/
+
+# Python, JS, build artifacts and caches (at any depth).
 .venv/
 venv/
 env/
 ENV/
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
@@ -24,11 +50,13 @@ __pycache__/
 coverage.xml
 htmlcov/
 *.egg-info/
+node_modules/
+site-packages/
 build/
 dist/
-site-packages/
+release/
 
-# Operating systems, editors, assistants and local developer profiles
+# OS, editor and agent-local settings: never publish developer state.
 .DS_Store
 Thumbs.db
 Desktop.ini
@@ -36,22 +64,42 @@ Desktop.ini
 .idea/
 .fleet/
 .cursor/
-.cursorindexingignore
 .claude/
 .codex/
+.agents/
 .continue/
 .windsurf/
 .roo/
-.aider*
-.agents/
 .zed/
+.kiro/
+.trae/
+.aider*/
+.gemini/
+.opencode/
+.openclaw/
+.pi/
+.kimi/
 .project
 .pydevproject
 *.code-workspace
 *.sublime-workspace
 *.sublime-project
+*.iml
+.cursorindexingignore
+.cursorrules
+.windsurfrules
+.claude.json
+.aider*
+.mcp.json
+mcp.json
+mcp.yaml
+.skill-lock.json
+.project-state/
+.task-state/
+.sync-state/
+.scratch/
 
-# Environment and user-specific configuration
+# Credentials and actual environment/provider configuration, at any depth.
 .env
 .env.*
 *.env
@@ -62,22 +110,40 @@ local.*.yaml
 local.*.yml
 local.*.json
 config.local.*
-settings.local.*
 config.private.*
-*.secrets.*
-*credentials*.json
-*credentials*.yaml
-*credentials*.yml
-service-account*.json
-service_account*.json
-auth*.json
+settings.local.*
+model_config.yaml
+image-provider.json
+image-provider.yaml
+provider.json
+provider.yaml
+config.json
+settings.json
+configs/
+*secret*
+*credential*
+*api-key*
+*api_key*
+*password*
+*access-token*
+*access_token*
+*refresh-token*
+*refresh_token*
+service-account*
+service_account*
+auth.json
+auth.*.json
 .oauth*/
+.ssh/
+.aws/
+.azure/
+.config/
+.kube/
+.gnupg/
+.netrc
 .npmrc
 .pypirc
-.netrc
 .python_history
-
-# Cryptographic secrets / tokens / signing material
 *.pem
 *.key
 *.p12
@@ -87,74 +153,102 @@ auth*.json
 *.keystore
 *.asc
 *.gpg
+*.kdbx
 id_rsa*
 id_ed25519*
-*.kdbx
 
-# Private input data, experiments, unpublished drafts, logs and outputs
-/docs/
-/documents/
-/internal/
-/private/
-/notes/
-/reports/
-/plans/
-/drafts/
-/work/
-/workspace/
-/tmp/
-/temp/
-/cache/
-/data/
-/datasets/
-/research-data/
-/papers/
-/checkpoints/
-/runs/
-/results/
-/outputs/
-/output/
-/artifacts/
-/generated/
-/figures/
-/logs/
-/screenshots/
-/notebooks/
-/release/
-/reviews/
+# Internal documents, research inputs, task state and results, at ANY depth.
+docs/
+documents/
+internal/
+private/
+notes/
+reports/
+reviews/
+plans/
+drafts/
+manuscripts/
+papers/
+research/
+work/
+workspace/
+scratch/
+tmp/
+temp/
+cache/
+data/
+datasets/
+research-data/
+checkpoints/
+runs/
+results/
+outputs/
+output/
+artifacts/
+generated/
+figures/
+logs/
+screenshots/
+notebooks/
+sessions/
+transcripts/
+jobs/
+native-jobs/
+native_runtime/
+attachments/
+deliverables/
+_peer/
+_*_tmp/
 *.log
 *.trace
-*.sqlite
-*.sqlite3
+*.jsonl
+*.har
+*.pcap
+*.pcapng
 *.db
+*.sqlite*
 *.ipynb
+*.receipt.json
+*.output.json
+context.json
+request.json
+repair.json
+prompt.txt
+generation-metadata.json
+workflow-plan.json
+workflow-result.json
+PACKAGE_MANIFEST.json
+*.bak
+*.tmp
+*.swp
+*.swo
+*~
+
+# Documents are private by default. Only the exact reviewed runtime files below
+# are public: README, SKILL instructions, legal notices and runtime references.
+*.[mM][dD]
+*.mdx
+*.rst
+*.adoc
+*.org
+*.txt
 *.pdf
-*.pptx
+*.doc
 *.docx
+*.odt
+*.rtf
+*.xls
 *.xlsx
+*.csv
+*.ppt
+*.pptx
+*.vsdx
 *.zip
 *.tar
-*.tar.gz
+*.gz
 *.tgz
 *.7z
 *.rar
-
-# Local-only packaging metadata and internal project state
-/PACKAGE_MANIFEST.json
-/CHANGELOG.md
-/DEV_NOTES.md
-/AGENTS.md
-/TODO.md
-/ROADMAP.md
-/status.md
-/.project-state/
-/.task-state/
-
-# Do not broadly ignore *.md or /references/:
-# README.md, SKILL.md and references/*.md are PUBLIC RUNTIME SOURCES.
-# assets/ is restricted to non-confidential fixtures and configuration.
-
-# Generated or unreviewed image assets are private by default.
 *.png
 *.jpg
 *.jpeg
@@ -164,52 +258,102 @@ id_ed25519*
 *.tif
 *.bmp
 *.svg
+*.ttf
+*.otf
+*.woff
+*.woff2
+*.eot
+*.pfb
+*.pfm
 
-# Experiment tables are private by default; allow only the bundled synthetic demo.
-*.csv
-!research-figure/assets/demo-synthetic-ablation.csv
+# Public first-party runtime documents (must match PUBLIC_DOCUMENTS in checker).
+!/README.md
+!/THIRD_PARTY_NOTICES.md
+!/research-figure/SKILL.md
+!/research-figure/THIRD_PARTY_NOTICES.md
+!/research-figure/assets/design-notes-template.md
+!/research-figure/references/agent-matching.md
+!/research-figure/references/canonical-exchange.md
+!/research-figure/references/core-capabilities.md
+!/research-figure/references/cvpr-figure-library.md
+!/research-figure/references/design-core.md
+!/research-figure/references/figure-spec.md
+!/research-figure/references/integrations.md
+!/research-figure/references/journal-mechanism-style.md
+!/research-figure/references/layout-library.md
+!/research-figure/references/local-image-pipeline.md
+!/research-figure/references/mechanism-figure-workflow.md
+!/research-figure/references/model-routing.md
+!/research-figure/references/orchestration.md
+!/research-figure/references/paperbanana-delegation.md
+!/research-figure/references/prompt-system.md
+!/research-figure/references/quality-gates.md
+!/research-figure/references/recipes.md
+!/research-figure/references/reconstruction.md
+!/research-figure/references/routing.md
+!/research-figure/references/style-spec.md
+!/research-figure/references/tikz-quality-standards.md
+!/research-figure/references/tikz-workflow.md
+!/research-figure/references/trigger-regression.md
+!/research-figure/references/upstream-maintenance.md
+!/research-figure/references/zcode-local-pipeline.md
+!/research-figure/requirements-exchange.txt
+!/research-figure/requirements-native-qa.txt
+!/research-figure/requirements-plot.txt
 
-# Same sensitive directories inside the installable Skill folder.
-**/docs/
-**/internal/
-**/private/
-**/notes/
-**/drafts/
-**/work/
-**/runs/
-**/output/
-**/outputs/
-**/artifacts/
-**/generated/
-**/checkpoints/
-**/screenshots/
+# Synthetic public fixture; no experiment CSVs.
+!/research-figure/assets/demo-synthetic-ablation.csv
 
-# Reproducible offline CI peer checkout is runtime-only
-/_peer/
-# Local additions (v0.6.1)
-configs/
-.skill-lock.json
-_*_tmp/
-_*.[jp]p[g]?
-# scratch scripts & evidence crops produced during development
-_*.py
-_*.png
+# Exactly reviewed vendor sources/assets. The lock hash-checks their bytes.
+# A public config TEMPLATE is allowed; .env and real provider configs are not.
+!/research-figure/kernels/design/configs/
+/research-figure/kernels/design/configs/*
+!/research-figure/kernels/design/configs/model_config.template.yaml
+!/research-figure/kernels/design/configs/model_registry.yaml
+!/research-figure/kernels/design/requirements-exchange.txt
+!/research-figure/kernels/design/requirements-tested.txt
+!/research-figure/kernels/design/requirements.txt
+!/research-figure/kernels/design/rfs/README.md
+!/research-figure/kernels/design/style_guides/neurips2025_diagram_style_guide.md
+!/research-figure/kernels/design/style_guides/neurips2025_plot_style_guide.md
+!/research-figure/kernels/layout/assets/gallery/attention-tokens.png
+!/research-figure/kernels/layout/assets/gallery/blindspot-teaser.png
+!/research-figure/kernels/layout/assets/gallery/dual-branch.png
+!/research-figure/kernels/layout/assets/gallery/factorial-2x2.png
+!/research-figure/kernels/layout/assets/gallery/framework-with-io.png
+!/research-figure/kernels/layout/assets/gallery/from-code-depthnet.png
+!/research-figure/kernels/layout/assets/gallery/gated-module.png
+!/research-figure/kernels/layout/assets/gallery/module-detail.png
+!/research-figure/kernels/layout/assets/gallery/pipeline-4stage.png
+!/research-figure/kernels/layout/assets/gallery/quickstart.png
+!/research-figure/kernels/layout/assets/gallery/stencil.png
+!/research-figure/kernels/layout/assets/gallery/streaming-worldmodel.png
+!/research-figure/kernels/layout/assets/gallery/study-overview.png
+!/research-figure/kernels/layout/assets/gallery/surroundview-pipeline.png
+!/research-figure/kernels/layout/assets/gallery/taxonomy.png
+!/research-figure/kernels/layout/assets/gallery/teacher-student.png
+!/research-figure/kernels/layout/assets/gallery/teaser-comparison.png
+!/research-figure/kernels/layout/assets/gallery/trainable-frozen.png
+!/research-figure/kernels/layout/assets/gallery/wrapped-pipeline.png
+!/research-figure/kernels/layout/references/after-handover.md
+!/research-figure/kernels/layout/references/anti-ai-checklist.md
+!/research-figure/kernels/layout/references/app-compatibility.md
+!/research-figure/kernels/layout/references/archetypes.md
+!/research-figure/kernels/layout/references/case-studies.md
+!/research-figure/kernels/layout/references/corpus-report.md
+!/research-figure/kernels/layout/references/from-code.md
+!/research-figure/kernels/layout/references/house-style.md
+!/research-figure/kernels/layout/references/latex-integration.md
+!/research-figure/kernels/layout/references/spec-language.md
+!/research-figure/kernels/layout/references/symbols-and-captions.md
+!/research-figure/kernels/layout/references/visio-workflow.md
+!/research-figure/kernels/layout/static/core/contract.md
+!/research-figure/kernels/layout/static/core/stance.md
+!/research-figure/kernels/layout/templates/stencil.pptx
+!/research-figure/kernels/layout/templates/stencil.svg
+!/research-figure/kernels/layout/templates/stencil.vsdx
 
-# Reviewed source-only kernels. The lock-bound scanner, not this ignore file,
-# authorizes their exact bytes. Do not admit .env, actual provider configs or caches.
-!research-figure/kernels/design/configs/
-!research-figure/kernels/design/configs/model_config.template.yaml
-!research-figure/kernels/design/configs/model_registry.yaml
-!research-figure/kernels/layout/assets/
-!research-figure/kernels/layout/assets/gallery/
-!research-figure/kernels/layout/assets/gallery/*.png
-!research-figure/kernels/layout/templates/*.pptx
-!research-figure/kernels/layout/templates/*.vsdx
-!research-figure/kernels/layout/templates/*.svg
+# Transient update coordination files are not source.
 research-figure/kernels/.sync-*/
 research-figure/kernels/.upstream-sync.lock
 research-figure/assets/.upstreams.lock.new
-
-# Upstream package initializers/metrics are source, not local scratch scripts.
-!research-figure/kernels/design/**/_*.py
-!research-figure/kernels/layout/**/_*.py

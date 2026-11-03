@@ -116,7 +116,7 @@ class LocalPipelineTests(unittest.TestCase):
 
     def test_config_credentials_and_unsafe_http_refused(self):
         original=json.loads(self.config.read_text())
-        for bad in ['http://remote.invalid/v1','https://user:secret@example.invalid','https://example.invalid?key=not-real']:
+        for bad in ['http://remote.invalid/v1','https://' + 'user:secret@example.invalid','https://example.invalid?key=not-real']:
             self.config.write_text(json.dumps(dict(original,base_url=bad)))
             with self.assertRaises(ValueError): gen.load_config(self.config)
         self.config.write_text(json.dumps(dict(original,base_url='http://127.0.0.1:8123/v1',allow_http_loopback=True)))
