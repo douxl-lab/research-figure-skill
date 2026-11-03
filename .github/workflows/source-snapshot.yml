@@ -1,0 +1,53 @@
+name: Maintainer source snapshot
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/source-snapshot.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          path: rfs
+      - uses: actions/checkout@v5
+        with:
+          repository: techdou/research-figure-skill
+          ref: e1080b6abf2586f4557a315b19ffb063ff9dafe3
+          fetch-depth: 0
+          persist-credentials: false
+          path: contributor
+      - uses: actions/checkout@v5
+        with:
+          repository: douxl-lab/PaperBanana
+          ref: 1937a4a6701a76cd01724d359797bb14e2a93e17
+          fetch-depth: 0
+          persist-credentials: false
+          path: design-source
+      - uses: actions/checkout@v5
+        with:
+          repository: ChizkiyahuOhayon/CVPR-Figure
+          ref: 8adb0d6b881ed0c8643657ccd1b2f43258d4a3d1
+          fetch-depth: 0
+          persist-credentials: false
+          path: layout-source
+      - name: Archive public source histories without executing source code
+        shell: bash
+        run: |
+          mkdir snapshots
+          for repo in rfs contributor design-source layout-source; do
+            git -C "$repo" bundle create "${GITHUB_WORKSPACE}/snapshots/${repo}.bundle" HEAD --branches --tags
+            git -C "$repo" rev-parse HEAD > "snapshots/${repo}.sha"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rfs-review-sources
+          path: snapshots/
+          retention-days: 2
+          if-no-files-found: error
