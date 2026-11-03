@@ -13,32 +13,16 @@ jobs:
         with:
           ref: 1666435857d3805c333c64f651d3fc4403144596
           persist-credentials: false
-      - name: Verify source selector fetches original author and protects fork
+      - name: Verify original upstream and protected fork
         shell: bash
         run: |
           set -euo pipefail
           python research-figure/scripts/upstreams.py check --kernel design --allow-network > original-result.json
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          data=json.loads(Path('original-result.json').read_text())
-          assert data['status']=='COMPLETE',data
-          found=data['results'][0]
-          assert found['source_role']=='original',found
-          assert found['source_repository']=='https://github.com/dwzhu-pku/PaperBanana',found
-          assert found['to_revision']=='dafc2d41c10395c8bc37faad26836070fef0add8',found
-          assert 'installed_diff' in found and 'diff' in found,found
-          print('Original upstream network check PASS; original and installed diffs independent')
-          PY
-          if python research-figure/scripts/upstreams.py pull --kernel design --allow-network > /tmp/original-pull.json; then
-            echo 'ERROR: protected native fork was unexpectedly overwritten'; exit 1
-          else
-            python - <<'PY'
-            import json
-            d=json.load(open('/tmp/original-pull.json'))
-            assert d['status']=='BLOCKED_OR_PARTIAL'
-            assert 'protected fork-only' in d.get('error','')
-            print('Fail-closed raw-original pull protection PASS')
-            PY
-          fi
+          python -c "import json; d=json.load(open('original-result.json')); r=d['results'][0]; assert d['status']=='COMPLETE'; assert r['source_role']=='original'; assert r['source_repository']=='https://github.com/dwzhu-pku/PaperBanana'; assert r['to_revision']=='dafc2d41c10395c8bc37faad26836070fef0add8'; assert 'installed_diff' in r and 'diff' in r; print('Original fetch PASS')"
+          set +e
+          python research-figure/scripts/upstreams.py pull --kernel design --allow-network > blocked-pull.json
+          status=$?
+          set -e
+          test "$status" -eq 2
+          python -c "import json; d=json.load(open('blocked-pull.json')); assert d['status']=='BLOCKED_OR_PARTIAL'; assert 'protected fork-only' in d.get('error',''); print('Fork protection PASS')"
           python research-figure/scripts/upstreams.py verify >/dev/null
