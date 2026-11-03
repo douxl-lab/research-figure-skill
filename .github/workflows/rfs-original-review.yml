@@ -1,37 +1,44 @@
-name: Review original PaperBanana history
+name: One-shot verify original upstream source selection
 on:
   push:
     branches: ['research/original-paperbanana-review-20261103']
 permissions:
   contents: read
 jobs:
-  snapshot:
+  original-check:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v5
         with:
-          repository: dwzhu-pku/PaperBanana
-          ref: dafc2d41c10395c8bc37faad26836070fef0add8
-          path: original
-          fetch-depth: 0
+          ref: 1666435857d3805c333c64f651d3fc4403144596
           persist-credentials: false
-      - name: Snapshot original public Git history and sources
+      - name: Verify source selector fetches original author and protects fork
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p reviews
-          git -C original bundle create "$GITHUB_WORKSPACE/reviews/original.bundle" HEAD
-          git -C original rev-parse HEAD > reviews/original.sha
+          python research-figure/scripts/upstreams.py check --kernel design --allow-network > original-result.json
           python - <<'PY'
+          import json
           from pathlib import Path
-          import hashlib
-          p=Path('reviews/original.bundle')
-          print('Original source bundle: size', p.stat().st_size,'sha256',hashlib.sha256(p.read_bytes()).hexdigest())
+          data=json.loads(Path('original-result.json').read_text())
+          assert data['status']=='COMPLETE',data
+          found=data['results'][0]
+          assert found['source_role']=='original',found
+          assert found['source_repository']=='https://github.com/dwzhu-pku/PaperBanana',found
+          assert found['to_revision']=='dafc2d41c10395c8bc37faad26836070fef0add8',found
+          assert 'installed_diff' in found and 'diff' in found,found
+          print('Original upstream network check PASS; original and installed diffs independent')
           PY
-      - uses: actions/upload-artifact@v4
-        with:
-          name: original-paperbanana-20261103
-          path: reviews/
-          if-no-files-found: error
-          retention-days: 2
+          if python research-figure/scripts/upstreams.py pull --kernel design --allow-network > /tmp/original-pull.json; then
+            echo 'ERROR: protected native fork was unexpectedly overwritten'; exit 1
+          else
+            python - <<'PY'
+            import json
+            d=json.load(open('/tmp/original-pull.json'))
+            assert d['status']=='BLOCKED_OR_PARTIAL'
+            assert 'protected fork-only' in d.get('error','')
+            print('Fail-closed raw-original pull protection PASS')
+            PY
+          fi
+          python research-figure/scripts/upstreams.py verify >/dev/null
