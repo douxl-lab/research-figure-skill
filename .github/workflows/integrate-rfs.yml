@@ -1,0 +1,118 @@
+name: Assemble and verify RFS embedded kernels
+on:
+  push:
+    branches: ['integration/rfs-kernels-v0.8.0']
+permissions:
+  contents: write
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      PAPERBANANA_ROOT: ${{ github.workspace }}/work/research-figure/kernels/design
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          path: work
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@v5
+        with:
+          repository: douxl-lab/PaperBanana
+          ref: 1937a4a6701a76cd01724d359797bb14e2a93e17
+          path: design-source
+          persist-credentials: false
+      - uses: actions/checkout@v5
+        with:
+          repository: ChizkiyahuOhayon/CVPR-Figure
+          ref: 8adb0d6b881ed0c8643657ccd1b2f43258d4a3d1
+          path: layout-source
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Reconstruct exact locally tested source tree
+        run: |
+          cp work/.github/rfs-upgrade/assemble.py "$RUNNER_TEMP/assemble.py"
+          python "$RUNNER_TEMP/assemble.py" work design-source layout-source
+          mkdir -p release-checks
+      - name: Install Python 3.12 test dependencies
+        working-directory: work
+        run: |
+          python -m pip install -r research-figure/requirements-exchange.txt -r research-figure/requirements-plot.txt -r research-figure/requirements-native-qa.txt PyYAML
+          python -m pip install "git+https://github.com/agentskills/agentskills.git@69ef37e9424c0a7ea9dd2293b559e43ec8176379#subdirectory=skills-ref"
+      - name: Python 3.12 regression and official Skill validation
+        working-directory: work
+        run: |
+          python -m unittest discover -s research-figure/tests -q 2>&1 | tee ../release-checks/tests-3.12.log
+          skills-ref validate research-figure | tee ../release-checks/skills-ref.log
+          python research-figure/scripts/check_skill.py
+          python research-figure/scripts/check_repository.py --root . --tracked
+          python research-figure/scripts/upstreams.py verify
+          python research-figure/scripts/smoke_kernels.py | tee ../release-checks/offline-smoke.json
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.10'
+      - name: Python 3.10 regression
+        working-directory: work
+        run: |
+          python -m pip install -r research-figure/requirements-exchange.txt -r research-figure/requirements-plot.txt -r research-figure/requirements-native-qa.txt
+          python -m unittest discover -s research-figure/tests -q 2>&1 | tee ../release-checks/tests-3.10.log
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Python 3.13 regression and complete package
+        working-directory: work
+        run: |
+          python -m pip install -r research-figure/requirements-exchange.txt -r research-figure/requirements-plot.txt -r research-figure/requirements-native-qa.txt
+          python -m unittest discover -s research-figure/tests -q 2>&1 | tee ../release-checks/tests-3.13.log
+          python research-figure/scripts/build_package.py --out ../release-checks/research-figure-0.8.0.zip | tee ../release-checks/package.json
+      - name: Record tested merge commit on integration branch only
+        working-directory: work
+        env:
+          RFS_PUSH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import base64, json, os, subprocess
+          from pathlib import Path
+          def git(*args, **kw):
+              return subprocess.check_output(['git', *args], text=True, **kw).strip()
+          base = 'b04d8ce43d5215ec5dd63bbf06e54601283230d8'
+          pr = 'e1080b6abf2586f4557a315b19ffb063ff9dafe3'
+          expected_tree = 'ff16f4fed4fe2b4c31364fd403d95f2e033318cb'
+          control = os.environ['GITHUB_SHA']
+          branch = 'refs/heads/integration/rfs-kernels-v0.8.0'
+          main = git('ls-remote','origin','refs/heads/main').split()[0]
+          current = git('ls-remote','origin',branch).split()[0]
+          current_pr = git('ls-remote','origin','refs/pull/1/head').split()[0]
+          if (main, current, current_pr) != (base, control, pr):
+              raise SystemExit('Concurrent branch/PR update; stop rather than overwrite')
+          git('fetch','origin','refs/pull/1/head')
+          if git('rev-parse','FETCH_HEAD') != pr:
+              raise SystemExit('PR head changed during fetch')
+          if git('write-tree') != expected_tree:
+              raise SystemExit('Tested tree drift')
+          git('config','user.name','github-actions[bot]')
+          git('config','user.email','41898282+github-actions[bot]@users.noreply.github.com')
+          message = ('feat(skill): embed design and layout kernels with safe upstream sync; merge PR #1\n\n'
+                     'RFS 0.8.0: preserve contributor ancestry and generalized local workflow, '
+                     'bundle 130 provenance-locked upstream files, neutral capability names, '
+                     'guarded image provenance and reproducible packaging. '
+                     'Exact source tree verified against local tests and Python 3.10/3.12/3.13 CI.\n')
+          commit = git('commit-tree', expected_tree, '-p', control, '-p', pr, input=message)
+          token = base64.b64encode(('x-access-token:' + os.environ['RFS_PUSH_TOKEN']).encode()).decode()
+          env = dict(os.environ, GIT_CONFIG_COUNT='1', GIT_CONFIG_KEY_0='http.https://github.com/.extraheader', GIT_CONFIG_VALUE_0='AUTHORIZATION: basic ' + token)
+          subprocess.run(['git','push','origin',commit+':'+branch], env=env, check=True)
+          result = {'status':'TESTED_INTEGRATION_READY_NOT_MAIN', 'commit':commit, 'tree':expected_tree, 'parents':[control,pr], 'version':'0.8.0'}
+          Path('../release-checks/integration-result.json').write_text(json.dumps(result,indent=2)+'\n')
+          print(json.dumps(result))
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
+              f.write('Verified integration commit: `'+commit+'`\n\nNo main branch was updated by this workflow.\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rfs-integrated-release
+          path: release-checks/
+          if-no-files-found: error
+          retention-days: 14
