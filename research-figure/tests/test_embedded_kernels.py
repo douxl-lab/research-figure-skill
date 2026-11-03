@@ -137,6 +137,41 @@ class PullTests(unittest.TestCase):
         u.sync(self.root,'design',action='pull',source=self.source,accept_license_change=True)
         self.assertEqual((self.root/'kernels/design/LICENSE').read_text(),'Changed test license\n')
 
+    def test_original_upstream_is_default_and_protected_fork_is_not_overwritten(self):
+        # The exact reference baseline is the first synthetic revision.
+        lock_path = self.root / u.LOCK
+        lock = json.loads(lock_path.read_text())
+        entry = lock['kernels']['design']
+        entry.update(original_upstream='https://github.com/original/fixture',
+                     original_revision=self.rev, fork_protected=True)
+        lock_path.write_text(json.dumps(lock))
+        (self.source / 'core.py').write_text('UPSTREAM_ONLY_FIX = True\n')
+        new_revision = self.commit()
+        read_only_before = lock_path.read_bytes()
+        inspected = u.sync(self.root, 'design', action='check', source=self.source)
+        self.assertEqual(inspected['source_role'], 'original')
+        self.assertEqual(inspected['source_repository'], 'https://github.com/original/fixture')
+        self.assertEqual(inspected['from_revision'], self.rev)
+        self.assertEqual(inspected['to_revision'], new_revision)
+        self.assertEqual(inspected['diff']['changed'], ['core.py'])
+        self.assertEqual(lock_path.read_bytes(), read_only_before)
+        with self.assertRaisesRegex(ValueError, 'protected fork-only'):
+            u.sync(self.root, 'design', action='pull', source=self.source)
+        self.assertEqual((self.root / 'kernels/design/core.py').read_text(),
+                         'raise RuntimeError("SOURCE MUST NEVER EXECUTE")\n')
+        adapted = u.sync(self.root, 'design', action='pull', source=self.source,
+                         source_role='maintained')
+        self.assertEqual(adapted['status'], 'UPDATED_UNTESTED')
+        self.assertEqual(adapted['source_role'], 'maintained')
+
+    def test_original_upstream_contract_requires_provenance(self):
+        lock_path=self.root/u.LOCK
+        lock=json.loads(lock_path.read_text())
+        lock['kernels']['design']['original_upstream']='https://github.com/original/fixture'
+        lock_path.write_text(json.dumps(lock))
+        with self.assertRaisesRegex(ValueError, 'original_revision'):
+            u.read_lock(self.root)
+
     def test_network_is_opt_in(self):
         with self.assertRaisesRegex(ValueError,'allow-network'):
             u.sync(self.root,'design')

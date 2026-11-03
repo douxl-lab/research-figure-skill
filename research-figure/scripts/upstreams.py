@@ -71,6 +71,13 @@ def read_lock(root: Path) -> dict:
             raise ValueError('Unexpected kernel destination')
         if not re.fullmatch(r'https://github\.com/[\w.-]+/[\w.-]+', entry.get('repository', '')):
             raise ValueError('Expected a public HTTPS GitHub source')
+        if entry.get('original_upstream'):
+            if not re.fullmatch(r'https://github\.com/[\w.-]+/[\w.-]+', entry['original_upstream']):
+                raise ValueError('Expected a public original_upstream GitHub source')
+            if not re.fullmatch(r'[0-9a-f]{40}', entry.get('original_revision', '')):
+                raise ValueError('original_revision must record a known original upstream commit')
+        elif entry.get('original_revision'):
+            raise ValueError('original_revision requires original_upstream')
         if not re.fullmatch(r'[0-9a-f]{40}', entry.get('revision', '')):
             raise ValueError('Revision must be an exact Git commit')
         if not isinstance(entry.get('include'), list) or not entry['include'] or not all(isinstance(p, str) for p in entry['include']):
@@ -139,12 +146,25 @@ def git(args: list[str], *, cwd: Path | None = None, binary: bool = False) -> by
 
 
 @contextmanager
-def source_repo(entry: dict, ref: str, source: Path | None, allow_network: bool):
+def source_repo(entry: dict, ref: str, source: Path | None, allow_network: bool,
+                *, source_role: str = 'maintained', baseline: str | None = None):
+    """Fetch from the original upstream by default, never silently from a fork.
+
+    For original reports, retrieve the exact recorded baseline too, so the
+    upstream diff is not polluted by fork-only files and vendor adaptations.
+    """
+    if source_role not in {'original', 'maintained'}:
+        raise ValueError('Unknown source role')
+    repository = entry.get('original_upstream') if source_role == 'original' else entry['repository']
+    if not repository:
+        raise ValueError('Original upstream is not configured for this kernel')
     if not ref or ref.startswith('-') or any(ord(c) < 32 for c in ref):
         raise ValueError('Invalid upstream ref')
     if source is not None:
         path = source.expanduser().resolve()
         revision = git(['rev-parse', '--verify', '--end-of-options', ref + '^{commit}'], cwd=path)
+        if baseline:
+            git(['rev-parse', '--verify', '--end-of-options', baseline + '^{commit}'], cwd=path)
         yield path, revision
     else:
         if not allow_network:
@@ -152,8 +172,10 @@ def source_repo(entry: dict, ref: str, source: Path | None, allow_network: bool)
         with tempfile.TemporaryDirectory(prefix='rfs-upstream-') as temp:
             path = Path(temp)
             git(['init', '--bare', '-q', str(path)])
-            git(['fetch', '--depth', '1', '--no-tags', entry['repository'] + '.git', ref], cwd=path)
+            git(['fetch', '--depth', '1', '--no-tags', repository + '.git', ref], cwd=path)
             revision = git(['rev-parse', '--verify', 'FETCH_HEAD^{commit}'], cwd=path)
+            if baseline and baseline != revision:
+                git(['fetch', '--depth', '1', '--no-tags', repository + '.git', baseline], cwd=path)
             yield path, revision
 
 
@@ -207,7 +229,7 @@ def changed_files(old: dict, new: dict) -> dict:
 
 def sync(root: Path, name: str, *, action: str = 'check', ref: str | None = None,
          source: Path | None = None, allow_network: bool = False, bootstrap: bool = False,
-         accept_license_change: bool = False) -> dict:
+         accept_license_change: bool = False, source_role: str | None = None) -> dict:
     root = root.expanduser().resolve()
     lock_path = root / LOCK
     before = lock_path.read_bytes()
@@ -216,17 +238,37 @@ def sync(root: Path, name: str, *, action: str = 'check', ref: str | None = None
         raise ValueError('Unknown kernel/action')
     entry = lock['kernels'][name]
     verify_entry(root, entry, bootstrap=bootstrap)
+    role = source_role or ('original' if entry.get('original_upstream') and not bootstrap else 'maintained')
+    if role == 'original' and not entry.get('original_upstream'):
+        raise ValueError('This kernel has no original_upstream; use maintained source')
+    # Preserve reproducible bootstrapping of a known vendor snapshot.
     requested = ref or (entry['revision'] if bootstrap else entry.get('branch', 'main'))
-    with source_repo(entry, requested, source, allow_network) as (repo, revision):
+    baseline = entry.get('original_revision') if role == 'original' and not bootstrap else None
+    with source_repo(entry, requested, source, allow_network, source_role=role,
+                     baseline=baseline) as (repo, revision):
         payload = selected_snapshot(repo, revision, entry['include'])
+        original_before = selected_snapshot(repo, baseline, entry['include']) if baseline else None
     files = {p: {'sha256': digest(raw), 'bytes': len(raw)} for p, raw in sorted(payload.items())}
-    delta = changed_files(entry.get('files', {}), files)
+    installed_delta = changed_files(entry.get('files', {}), files)
+    if original_before is not None:
+        prior = {p: {'sha256': digest(raw), 'bytes': len(raw)} for p, raw in original_before.items()}
+        delta = changed_files(prior, files)
+    else:
+        delta = installed_delta
     license_changed = digest(payload['LICENSE']) != entry['license_sha256']
-    result = {'kernel': name, 'from_revision': entry['revision'], 'to_revision': revision,
-              'diff': delta, 'license_changed': license_changed, 'files': len(files),
+    upstream_url = entry['original_upstream'] if role == 'original' else entry['repository']
+    result = {'kernel': name, 'source_role': role, 'source_repository': upstream_url,
+              'from_revision': baseline or entry['revision'],
+              'installed_revision': entry['revision'], 'to_revision': revision,
+              'diff': delta, 'installed_diff': installed_delta,
+              'license_changed': license_changed, 'files': len(files),
               'bytes': sum(r['bytes'] for r in files.values()), 'status': 'CHECKED_NOT_APPLIED'}
     if action == 'check':
         return result
+    if role == 'original' and entry.get('fork_protected') and not bootstrap:
+        raise ValueError('Original upstream was checked, but this kernel contains protected fork-only '
+                         'protocol/native-host additions. Adapt and test changes in the maintained fork; '
+                         'then pull with --source-role maintained. Direct overwrite is forbidden.')
     if license_changed and not accept_license_change:
         raise ValueError('Upstream license changed; review terms before --accept-license-change')
     if not any(delta.values()) and revision == entry['revision']:
@@ -282,6 +324,8 @@ def main() -> int:
     p.add_argument('--kernel', choices=['design', 'layout', 'all'], default='all')
     p.add_argument('--root', type=Path, default=ROOT)
     p.add_argument('--ref', help='Default: tracked branch; bootstrap defaults to locked revision')
+    p.add_argument('--source-role', choices=['original', 'maintained'], default=None,
+                   help='Default: original_upstream for checks/updates if configured, otherwise maintained; protected forks require adapted maintained pulls')
     p.add_argument('--source', type=Path, help='Explicit local Git checkout or bare mirror; no network')
     p.add_argument('--allow-network', action='store_true')
     p.add_argument('--bootstrap', action='store_true', help='Only populate empty kernels at locked revisions')
@@ -299,7 +343,7 @@ def main() -> int:
             else:
                 results.append(sync(a.root, name, action=a.action, ref=a.ref, source=a.source,
                                     allow_network=a.allow_network, bootstrap=a.bootstrap,
-                                    accept_license_change=a.accept_license_change))
+                                    accept_license_change=a.accept_license_change, source_role=a.source_role))
         print(json.dumps({'status': 'COMPLETE', 'results': results}, indent=2, ensure_ascii=False))
         return 0
     except (ValueError, OSError, UnicodeError, zipfile.BadZipFile) as exc:

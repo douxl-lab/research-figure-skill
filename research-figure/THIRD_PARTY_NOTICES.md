@@ -8,9 +8,9 @@ upstream attribution or claim sole authorship of the bundled source.
 
 `kernels/design/` contains a selected, unmodified source snapshot from
 https://github.com/douxl-lab/PaperBanana at
-`1937a4a6701a76cd01724d359797bb14e2a93e17`, based on
+`3f56e05bdb0f6d018da2ab654a59359ec0d11590`, based on
 https://github.com/dwzhu-pku/PaperBanana (PaperBanana / PaperVizAgent).
-The original `kernels/design/LICENSE` and source copyright notices are retained.
+It selectively adapts Parquet reference handling and CLI image-size propagation from the original upstream reviewed at `dafc2d41c10395c8bc37faad26836070fef0add8`; it does not wholesale merge all upstream changes. The original `kernels/design/LICENSE` and source copyright notices are retained.
 The snapshot includes the host coordinator, provider entrypoints, five-stage
 agents, prompts, protocol, configuration templates and style guides. Benchmark
 corpora, model weights, website assets, credentials and fonts are not included.
@@ -49,7 +49,5 @@ be checked when actually selected. No proprietary fonts or SDK binaries ship her
 ## Updates and audit trail
 
 `assets/upstreams.lock.json` is the authoritative, machine-readable revision and
-per-file SHA-256 inventory. The revisions above describe the v0.8.0 initial
-snapshot; after an update, the lock is authoritative and this notice must be
-reviewed. Updates preserve source notices and refuse unreviewed LICENSE changes.
+per-file SHA-256 inventory. The revisions above identify the v0.8.1 maintained integration. After any update, the lock is authoritative and this notice must be reviewed. Updates preserve source notices and refuse unreviewed LICENSE changes.
 Use the upstream maintenance guide and inspect the commit diff before release.

@@ -19,6 +19,8 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from utils.legacy_generation_options import FIGURE_SIZE_TO_IMAGE_SIZE, generation_additional_info
+
 
 def ensure_model_config():
     """Explicit legacy helper; normal preflight never writes configuration."""
@@ -30,8 +32,8 @@ def ensure_model_config():
 
 
 def ensure_dataset(task_name: str, **kwargs):
-    from utils.dataset import ensure_dataset as prepare
-    return prepare(task_name, work_dir=PROJECT_ROOT, **kwargs)
+    from utils.dataset import ensure_dataset as prepare, default_work_dir
+    return prepare(task_name, work_dir=kwargs.pop("work_dir", None) or default_work_dir(), **kwargs)
 
 
 def extract_final_image_b64(result: dict, exp_mode: str, task_name: str | None = None) -> str | None:
@@ -58,6 +60,11 @@ def _save_png(encoded: str, path: Path) -> None:
             os.unlink(temporary)
 
 
+def build_additional_info(args) -> dict[str, str]:
+    """Preserve the requested image-size tier through the headless CLI."""
+    return generation_additional_info(args.aspect_ratio, args.figure_size)
+
+
 def build_parser():
     parser = argparse.ArgumentParser(description="PaperBanana: generate scientific figures and RFS exchange bundles")
     parser.add_argument("--content", default="", help="Method text, or real plot data")
@@ -66,6 +73,8 @@ def build_parser():
     parser.add_argument("--task", choices=["diagram", "plot"], default="diagram")
     parser.add_argument("--output", default="output.png", help="PNG output path")
     parser.add_argument("--aspect-ratio", choices=["21:9", "16:9", "3:2", "1:1", "9:16"], default="21:9")
+    parser.add_argument("--figure-size", choices=list(FIGURE_SIZE_TO_IMAGE_SIZE), default=None,
+                        help="Requested image width/size tier; omit to retain the provider default")
     parser.add_argument("--max-critic-rounds", type=int, default=None)
     parser.add_argument("--num-candidates", type=int, default=10)
     parser.add_argument("--max-concurrent", type=int, default=None)
@@ -73,6 +82,7 @@ def build_parser():
     parser.add_argument("--plot-timeout-seconds", type=float, default=None)
     parser.add_argument("--retrieval-setting", choices=["auto", "manual", "random", "none"], default="auto")
     parser.add_argument("--dataset-policy", choices=["auto", "never", "download"], default="auto")
+    parser.add_argument("--work-dir", default=None, help="External job/cache directory (default: user cache); never the Skill tree")
     parser.add_argument("--offline", action="store_true", help="Disable dataset downloads. Live generation still requires an API.")
     parser.add_argument("--planner-metaphor", action="store_true")
     parser.add_argument("--main-model-name", default="")
@@ -132,11 +142,15 @@ async def run(args):
         raise ValueError("--offline conflicts with --dataset-policy download")
     source_content_text = content
     content = normalize_scientific_content(content, args.task, args.render_mode)
+    from utils.dataset import default_work_dir
+    work_dir = Path(args.work_dir).expanduser().resolve() if args.work_dir else default_work_dir()
+    if work_dir == PROJECT_ROOT or PROJECT_ROOT in work_dir.parents:
+        raise ValueError("--work-dir must be outside the source/installed Skill tree")
     config = ExpConfig(dataset_name="Demo", task_name=args.task, split_name="demo", exp_mode=args.exp_mode,
         retrieval_setting=args.retrieval_setting, planner_metaphor=args.planner_metaphor,
         max_critic_rounds=args.max_critic_rounds, main_model_name=args.main_model_name,
         image_gen_model_name=args.image_gen_model_name, main_model_provider=args.main_model_provider,
-        image_gen_provider=args.image_gen_provider, config_path=args.config, work_dir=PROJECT_ROOT,
+        image_gen_provider=args.image_gen_provider, config_path=args.config, work_dir=work_dir,
         render_mode=args.render_mode, max_concurrent=args.max_concurrent,
         candidate_timeout_seconds=args.candidate_timeout_seconds, plot_timeout_seconds=args.plot_timeout_seconds,
         allow_generated_plot_code=args.allow_generated_plot_code or args.render_mode == "legacy",
@@ -154,7 +168,7 @@ async def run(args):
     needs_references = config.exp_mode not in ("vanilla", "dev_polish") and config.retrieval_setting != "none"
     if needs_references:
         available = ensure_dataset(config.task_name, retrieval_setting=config.retrieval_setting,
-                                   policy=config.dataset_policy, offline=config.offline)
+                                   policy=config.dataset_policy, offline=config.offline, work_dir=config.work_dir)
         if not available:
             if config.offline or config.dataset_policy in ("never", "download"):
                 raise RuntimeError("Required reference data is unavailable. Supply local data or explicitly use --retrieval-setting none.")
@@ -166,7 +180,7 @@ async def run(args):
     data_list = [{"filename": f"skill_candidate_{index}", "caption": args.caption,
                   "content": content, "visual_intent": args.caption,
                   **({"source_content_text": source_content_text} if args.render_mode == "rfs" else {}),
-                  "additional_info": {"rounded_ratio": args.aspect_ratio},
+                  "additional_info": build_additional_info(args),
                   "max_critic_rounds": config.max_critic_rounds, "render_mode": config.render_mode,
                   **({"figure_spec": spec} if spec is not None else {})} for index in range(args.num_candidates)]
     output = Path(args.output).resolve()

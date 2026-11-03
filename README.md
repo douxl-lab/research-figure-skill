@@ -119,15 +119,22 @@ python research-figure/scripts/workflow.py run --spec /project/figure-spec.json 
 git pull --ff-only
 ```
 
-包内上游源码使用受控更新，不直接在内核目录执行未经审查的合并：
+包内上游源码使用受控更新。**设计内核的默认检查源已更正为原作者 `original_upstream`，不再误将我们的 Fork 当作原作者上游。** 因为我们保留了 FigureSpec、native-host 和隐私保护扩展，禁止原作者源码直接覆盖内核；先在我们的维护 Fork 适配并通过测试，再显式同步：
 
 ```bash
+# 核查原作者当前 main：仅读取、不写入
+python research-figure/scripts/upstreams.py check --kernel design --allow-network
+
+# 适配并提交到维护 Fork 后，更新已审查的内核快照
+python research-figure/scripts/upstreams.py pull --kernel design --source-role maintained --ref FULL_FORK_COMMIT_SHA --allow-network
+python research-figure/scripts/upstreams.py verify
+
+# 无独立 Fork 的版式内核仍走直接检查与受控更新
 python research-figure/scripts/upstreams.py check --kernel layout --allow-network
 python research-figure/scripts/upstreams.py pull --kernel layout --allow-network
-python research-figure/scripts/upstreams.py verify
 ```
 
-更新设计内核时将 `layout` 替换为 `design`。支持 `--ref <commit>` 固定版本及 `--source <local-repository>` 离线读取 Git 对象。脚本检查本地修改、额外文件、符号链接、许可证变化和并发操作，不执行新下载的代码、不安装依赖、不自动 commit / push。单内核替换失败会回退，多内核更新的部分完成情况会明确报告。
+支持 `--ref <commit>` 锁定版本和 `--source <local-repository>` 离线读取 Git 对象。存在本地改动、符号链接、许可证变更或并发操作时拒绝覆盖；不执行下载代码、不自动安装依赖，也不会自动 commit/push。具体双源策略见维护指南。
 
 更新后检查 diff、公开文件清单和完整回归，再显式提交。已发布提交使用 `git revert` 回滚，避免改写协作者历史。完整说明见[上游维护指南](research-figure/references/upstream-maintenance.md)。
 

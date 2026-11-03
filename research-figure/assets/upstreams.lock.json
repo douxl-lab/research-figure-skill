@@ -6,7 +6,7 @@
       "repository": "https://github.com/douxl-lab/PaperBanana",
       "upstream_project": "PaperBanana",
       "original_upstream": "https://github.com/dwzhu-pku/PaperBanana",
-      "revision": "1937a4a6701a76cd01724d359797bb14e2a93e17",
+      "revision": "3f56e05bdb0f6d018da2ab654a59359ec0d11590",
       "license": "Apache-2.0",
       "include": [
         "LICENSE",
@@ -154,8 +154,8 @@
           "bytes": 13681
         },
         "skill/run.py": {
-          "sha256": "08b191483e9e1601ab6a320c44c9202d94f2558e80af4534bc1bb513e32e4d48",
-          "bytes": 13000
+          "sha256": "54f49e270af16fb24384355c868bf320ab0abb5488f7e2c8a0487c1f1efa7a35",
+          "bytes": 14003
         },
         "style_guides/neurips2025_diagram_style_guide.md": {
           "sha256": "d2aee50170d9de995bae01c45737a779853c07a34c1ce106219dc5790ee5bea5",
@@ -174,8 +174,8 @@
           "bytes": 9196
         },
         "utils/dataset.py": {
-          "sha256": "4a377e8ba40c162aba8cf7441383f5cf6f4f6a1d8876ea70db9d6b44ad51fdcf",
-          "bytes": 1753
+          "sha256": "71483ef9daa2a2718cecfd282b1d71d60432d7c25f05e7bd0da3923f3a272e57",
+          "bytes": 7916
         },
         "utils/eval_toolkits.py": {
           "sha256": "8f3652332560d173627bd9b730edd62e5a0ceee7c014390af13356012ef02cb6",
@@ -217,7 +217,14 @@
           "sha256": "c5f52c081352284d0ff22c7bd44c84c6957effe42260fc2ec634f761c4319330",
           "bytes": 11579
         }
-      }
+      },
+      "original_revision": "836455537e863b5a2f40dace487a782c0bc5ef94",
+      "fork_protected": true,
+      "original_head_reviewed": "dafc2d41c10395c8bc37faad26836070fef0add8",
+      "adapted_upstream_topics": [
+        "parquet-reference-dataset-preparation",
+        "cli-figure-size-propagation"
+      ]
     },
     "layout": {
       "repository": "https://github.com/ChizkiyahuOhayon/CVPR-Figure",

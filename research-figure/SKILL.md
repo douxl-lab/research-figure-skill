@@ -5,7 +5,7 @@ description: >-
 license: MIT; bundled components retain their licenses in THIRD_PARTY_NOTICES.md
 compatibility: Python 3.10+ with jsonschema/Pillow for design coordination; actual host image tool or separately authorized provider for image generation. Layout sources/templates/gallery are bundled. Optional Matplotlib, XeLaTeX/Poppler and native editors remain runtime dependencies.
 metadata:
-  version: "0.8.0"
+  version: "0.8.1"
   category: "scientific-figure-orchestration"
 ---
 

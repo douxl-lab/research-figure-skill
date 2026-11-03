@@ -1,30 +1,36 @@
 # Embedded kernel maintenance
 
-## Two independent updates
+## Original upstream versus our maintained integration
 
-`git pull --ff-only` in the RFS repository gets our released code **and the committed kernel assets**. Installing the complete `research-figure/` directory carries them with it; no submodule initialization or second checkout is required.
+**`check` now uses the original author's `original_upstream` by default** when that field exists. It compares the actual original source commit against `original_revision` in the lock, instead of reporting changes against our fork as if they were upstream changes. `installed_diff` is separately reported to show why an unmodified copy would be unsafe. For the design kernel, the authoritative original is `dwzhu-pku/PaperBanana`; our maintained fork is `douxl-lab/PaperBanana`.
 
-Maintainers update copied upstream sources through `scripts/upstreams.py`. This is a selective Git-fetch/pull mechanism, not a raw `git pull` inside `kernels/`. It preserves exact upstream bytes, reviewable revisions and per-file SHA-256/size records while our wrappers retain neutral names and custom policy. Sources are declared in `assets/upstreams.lock.json`; upstream URLs, authors and license texts are not removed.
+The design kernel is **fork-protected**: upstream lacks our canonical FigureSpec protocol, `skill/native_host.py`, Exchange and privacy restrictions. Consequently a direct `pull --kernel design` of the raw original (the default source) intentionally **fails closed**. The supported three-step process is original discovery → adaptation and tests in our maintained fork → explicitly pull the tested maintained fork commit into RFS. This avoids falsely claiming that a fork-derived snapshot contains exactly the pristine original commit.
+
+The lock records three distinct revisions: `original_revision` is the original common-ancestor baseline, `original_head_reviewed` is the latest original HEAD inspected (not fully merged), and `revision` is the exact maintained fork commit whose bytes are bundled. `adapted_upstream_topics` lists selected incorporated changes. A checked original HEAD is not itself an installed upgrade.
 
 ```bash
-# Offline: verify every copied source/material file against the lock
+# No changes: compare original author's main to the pinned original baseline.
+python research-figure/scripts/upstreams.py check --kernel design --allow-network
+
+# Safe, separate step AFTER reviewing and committing adapted changes in our fork:
+python research-figure/scripts/upstreams.py check --kernel design --source-role maintained --allow-network
+python research-figure/scripts/upstreams.py pull --kernel design --source-role maintained --ref FULL_FORK_COMMIT_SHA --allow-network
 python research-figure/scripts/upstreams.py verify
 
-# Explicit network: inspect the upstream branch, without changing our tree
+# Equivalent offline evaluation against a trusted original/fork Git mirror:
+python research-figure/scripts/upstreams.py check --kernel design --source /outside/original-checkout
+python research-figure/scripts/upstreams.py pull --kernel design --source-role maintained --source /outside/maintained-fork --ref FULL_FORK_COMMIT_SHA
+
+# Layout remains un-forked and can be checked/pulled from its recorded repository.
 python research-figure/scripts/upstreams.py check --kernel layout --allow-network
-
-# Apply a clean update after inspection; no git commit/push is performed
 python research-figure/scripts/upstreams.py pull --kernel layout --allow-network
-# Reproducible update to a chosen commit:
-python research-figure/scripts/upstreams.py pull --kernel design --ref FULL_COMMIT_SHA --allow-network
-
-# Re-run gates, review the diff, commit and push in the parent RFS repository
-python research-figure/scripts/check_skill.py
-python research-figure/scripts/check_repository.py --root . --tracked
-python -m unittest discover -s research-figure/tests -v
 ```
 
-Use `--source /path/to/local/git/mirror --kernel design|layout` for an explicit offline mirror. It reads Git objects without executing source code. `--bootstrap` is only for initially empty kernel directories and defaults to the locked revision, not a floating branch. New releases are fully materialized, so ordinary users do not need it.
+`git pull --ff-only` in the RFS repository gets the already released code **and all committed kernel assets**. The complete `research-figure/` installation does not require a second clone/submodule. The update helper only reads Git objects and stages reviewable files; no downloaded Python is executed and no provider calls, dependency installs, commits or pushes occur automatically.
+
+For exact reproduction use `--ref FULL_COMMIT_SHA`. `--bootstrap` is strictly for an initially empty kernel and defaults to the locked maintained snapshot. Keep outputs, reference datasets, credentials and logs outside the installed Skill. Current design CLI materializes Hugging Face Parquet references in the user cache or the explicitly supplied `--work-dir`, not the public repository.
+
+After any accepted update, check the **entire** newly resolved dependency graph, scientific provenance, static audits and offline smoke tests, then review Git diff/CI before committing. Tests never prove live paid-model execution or scientific fidelity.
 
 ## Conflict and rollback policy
 
