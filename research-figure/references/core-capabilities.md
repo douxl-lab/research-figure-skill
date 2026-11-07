@@ -3,8 +3,9 @@
 | ID | Responsibility | Implementation |
 | --- | --- | --- |
 | design | One source-grounded five-stage visual-design chain | Bundled `kernels/design`, host tools or authorized provider |
+| image-generation | Complete raster generation and reference-image edits | Optional explicit external image2-api runtime; `image2_adapter.py` |
 | layout | Local reference/template/gallery search; native vector export and file audits | Bundled `kernels/layout` |
-| vector | Explicit precise mathematical/vector work | RFS TikZ adapter; separate system compiler |
+| vector | Explicit SVG code or TikZ output | Host LLM SVG authoring; RFS TikZ adapter with separate system compiler |
 | plot | Real measured data and reproducible plots | RFS Matplotlib adapter; separate library dependency |
 | reconstruction | Approved-reference native editing | Bundled handoff/QA; selected external editor when needed |
 | audit | Sources, hashes, scientific/visual review and actual native objects | RFS checks plus bundled layout auditors |

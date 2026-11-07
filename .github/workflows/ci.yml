@@ -46,10 +46,10 @@ jobs:
       - name: Exercise real embedded kernels offline
         run: python research-figure/scripts/smoke_kernels.py
       - name: Build complete installable package
-        run: python research-figure/scripts/build_package.py --out /tmp/research-figure-0.8.1.zip
+        run: python research-figure/scripts/build_package.py --out /tmp/research-figure-0.9.0.zip
       - uses: actions/upload-artifact@v4
         if: matrix.python-version == '3.12'
         with:
-          name: research-figure-0.8.1
-          path: /tmp/research-figure-0.8.1.zip
+          name: research-figure-0.9.0
+          path: /tmp/research-figure-0.9.0.zip
           retention-days: 14

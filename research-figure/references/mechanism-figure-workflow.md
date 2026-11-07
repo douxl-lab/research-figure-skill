@@ -1,25 +1,43 @@
 # Mechanism figure production SOP
 
-Portable production discipline: assets first, connection lanes before drawing, native structure plus justified raster content, and inspection of final saved files.
+**Default: understand → design the complete image → generate → inspect → targeted edit → deliver.** Image-model composition is the primary creative path. Code-drawn skeletons, asset assembly and vector reconstruction are explicit alternatives, not mandatory intermediate stages.
 
-## Eight steps
+## Source and visual brief
 
-1. **Specify.** For an existing reference, inspect it and record panel bounds, object inventory, text, raster slots and acceptance criteria. For a new mechanism, read the actual paper/code/formulas and validate FigureSpec. Science outranks a reference image when they conflict; mark unresolved conflicts pending instead of inventing a compromise.
-2. **Prepare assets.** Code-render purely mathematical illustrations when appropriate. Generated imagery may be illustrative placeholders only, labelled as such. Real optical/SAR crops, prediction maps and empirical plots come from their actual sources. For reconstruction crops, convert displayed coordinates to source-image coordinates, then inspect a contact sheet. Preserve aspect ratio and source rights.
-3. **Reserve lanes.** Allocate horizontal/vertical corridors before drawing arrows. Distinguish parallel edges with spacing appropriate to the final printed size. Pass explicit lane/bounds constraints to collaborators; shortest-path drawing is not sufficient.
-4. **Build panels.** Use a real available subagent/editor when appropriate, or one sequential producer when not. Generate repeated objects programmatically. Prefer structured XML editing to regex substitutions; ensure unique IDs, valid parents, referenced endpoints and native labels. A supplied layout cannot silently alter source semantics.
-5. **Merge and embed.** Merge panels with collision-free IDs and explicit coordinate transforms. Embed legitimate raster content in planned slots without stretching. Validate the final merged file, not only intermediate panels; do not silently delete dangling scientific edges.
-6. **Self-audit.** Check text/subscripts/tensor labels, line corridors, crossings through opaque objects, label overlap, raster inventory, object counts and z-order. Run structural checks, render a preview and inspect that actual preview. Record defects and limitations.
-7. **Independent inspection.** Use an actually available separate reviewer with the source, final file, acceptance criteria and known differences. Report when no independent review ran. On Windows, use UTF-8 task files/console settings where needed; never hard-code a particular reviewer CLI into the portable workflow. Failed inspection returns to repair and full final-file validation.
-8. **User approval and delivery.** Deliver the requested native source, publication export, preview, known differences and unresolved placeholder list. User approval concerns the specific candidate, not all future versions. Do not mark it approved in advance.
+Read the relevant paper/code/user explanation and preserve the actual modules, branches, arrows and dependency relationships in FigureSpec. Keep unknown facts pending. The source contract is not a mandate to put every source fact on the canvas. Most mechanism figures need only a few exact labels and no equations. Never invent formulas, dimensions, empirical improvements or observations.
 
-## Format decisions
+Choose one independent scientific question per image. Inspect relevant local design references, then state a concise visual story: what enters, what changes, what interacts, what leaves, and why the innovative operation differs. Give the innovation more visual space than routine preprocessing. Use purposeful glyphs, token/feature representations and spatial relationships; avoid a row of verbose boxes, poster headings or decorative complexity. Keep long explanation in the caption.
 
-| Target | Approach | Required qualification |
-| --- | --- | --- |
-| Preview PNG | Render the saved authoritative source | A preview is not native editability |
-| SVG/PDF | Layout/TikZ/editor vector export | Check actual printed text, symbols, arrows and embedded pixel resolution |
-| PPTX | Native layout writer or available native reconstruction backend | Inspect text, shapes and connectors; a rasterized edge remains raster |
-| draw.io | Available native builder/editor | Validate XML and inspect final render, not only coordinate tables |
+Reference images have explicit roles: composition, style, current candidate, or source evidence. Style references do not provide scientific facts. Preserve the scientific topology when adapting a reference. Connection lanes and panel proportions are design constraints, not a requirement to position every object with code.
 
-After manual edits, keep one authoritative source; never rerender an outdated spec over it. HTML-to-PPTX or alternative routes may be used only with a real available tool and disclosed editability limitations. Cross-export consistency and source/image/bundle hash binding are release gates where the required converters exist, not claims based on a planned command.
+## Default image-model route
+
+1. **Generate the complete composition.** Use the actual host image tool first, or an authorized configured image2-api/provider. The host LLM writes and reviews the prompt; the image model draws the full figure. Do not limit it to icons by default. A small candidate set is optional and budget-bound, not an unlimited search.
+2. **Inspect actual images.** Compare source topology, arrow endpoints, repeated symbols, spelling, label density, hierarchy, whitespace and readability at the intended printed size. High visual quality does not establish scientific correctness. Record specific observed defects rather than restating prompt intentions.
+3. **Edit the selected candidate.** For a local defect, send the selected image as the primary input and specify what changes, what must remain, and how the repair will be checked. Use additional references and a supported mask when useful. Never overwrite the selected original. An edit request cannot guarantee unrelated pixels remain identical: inspect every new result.
+4. **Finish when gates pass.** Stop at the requested format after source and visual review. A good PNG does not need conversion to SVG merely because SVG is available. Preserve the source contract, original/submitted prompt, candidates, references, repair instructions and generation metadata outside the public Skill.
+
+## Quality gates
+
+| Gate | Check |
+| --- | --- |
+| Science | Correct modules, branches, directed edges and innovation; no invented empirical content |
+| Communication | The mechanism is visible without paragraphs of explanation; labels identify rather than narrate |
+| Design | Clear hierarchy, intentional glyphs, balanced density, purposeful color and sufficient arrow spacing |
+| Publication | Readability at actual column width, correct aspect ratio and sufficient actual pixel dimensions |
+| Transparency | When requested, inspect the alpha channel and edges; white or checkerboard pixels are not transparency |
+| Iteration | Preserve accepted structure, version candidates and inspect the final saved bytes |
+
+DPI metadata alone does not add image detail. A PDF containing the PNG is still raster content. Report limitations instead of claiming native vectors or acceptance by a venue. Use an independent reviewer only when actually available; otherwise disclose that review was not independent. Approval refers to the specific image, not future variants.
+
+## Optional code/vector path
+
+Use host-authored SVG when the user explicitly asks for SVG or exact object editability. The host writes SVG code directly, then validates XML and renders the saved file for inspection. No image-API SVG call is needed. Keep editable text and semantic groups where feasible; avoid raster wrappers presented as native vectors. TikZ remains available for an explicitly suitable deliverable, not because the topic sounds mathematical.
+
+When a native reconstruction or mixed-data composition is requested, retain the established discipline: inventory assets, reserve connection lanes, build panels with unique IDs, merge using explicit transforms, preserve real pixels, and inspect the final composition and export. Do not rerender an outdated specification over manual edits.
+
+Real plots use source data and deterministic rendering. Optical/SAR images, predictions and measured heatmaps remain actual source assets. These boundaries do not force the surrounding mechanism illustration into a code-only style.
+
+## Delivery
+
+Default image delivery: the actual final image, a preview as needed, source/prompt/receipt records and a short unresolved-issues statement. SVG, native PPTX, draw.io and vector PDF are additional deliverables only when requested and actually verified. A flattened slide or wrapped PNG must be labelled accordingly. A prompt, dry-run, prepared job or `HOST_ACTION_REQUIRED` response is not a generated figure.

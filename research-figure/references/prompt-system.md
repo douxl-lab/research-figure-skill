@@ -13,7 +13,7 @@
 3. **Spatial Composition**: chosen reading spine, hierarchy, grouped regions, arrow corridors, anti-crossing and figure size.
 4. **Academic Visual Grammar**: paper-compatible typography, constrained palette, novelty emphasis, grayscale/column-width clarity.
 5. **Exact Text & Reconstruction Awareness**: literal spelling; clean separation of image art versus objects to be natively retyped.
-6. **Negative Constraints & Output**: no fake results, misspellings, extra arrows, unrelated icons, occlusion, dashboards, figure title. Output is a **design preview**, not native PPTX.
+6. **Negative Constraints & Output**: no fake results, misspellings, extra arrows, unrelated icons, occlusion, dashboards, figure title. Output is a **raster figure candidate**, not native PPTX.
 
 For current dated model IDs and separate parameters, read [model routing](model-routing.md) and `assets/prompts/model-registry.json`. `rfs.py models` lists candidate models but cannot confirm account access. `--model auto --provider gemini --priority balanced` compiles a Gemini Nano Banana 2.1 prompt as of 2026-10-09; override with an exact model ID and keep the registry receipt. Prompts return `model-call-plan.json`, which is **advisory only**, not an executable API request.
 
@@ -53,4 +53,18 @@ PaperBanana's own five agents already plan, style, visualize and critique. Canon
 
 ## Candidate -> approved design
 
-A high-quality image is a visual reference. After selection, inspect it and author detailed **image-anchored** notes using `assets/design-notes-template.md`; the compiler's pre-image design brief is a starting point, **not a substitute for observed image details**. An approved composition does not make fabricated numbers or false arrow relationships acceptable. Continue to [reconstruction](reconstruction.md).
+A high-quality image is a visual reference. After selection, inspect it and author detailed **image-anchored** notes using `assets/design-notes-template.md`; the compiler's pre-image design brief is a starting point, **not a substitute for observed image details**. An approved composition does not make fabricated numbers or false arrow relationships acceptable. Continue to [reconstruction](reconstruction.md) only when editable/native output is requested; otherwise deliver the reviewed image in the requested raster format.
+
+## Complete-image mechanism brief (default)
+
+Write a visual design brief, not a paragraph to print inside boxes. Use the actual source and a small exact-text whitelist. Do not add formulas, tensor dimensions, stage numbers, slogans or explanatory subtitles just to make a figure look academic. Equations belong only when they clarify this particular mechanism.
+
+The prompt should state: (1) the single scientific point; (2) the invariant topology and exact labels; (3) a composition, visual hierarchy and purposeful glyphs; (4) reference-image roles and protected elements; (5) canvas and negative constraints. Abstract tokens, feature stacks and routes should explain operations rather than decorate them. A caption carries the longer explanation outside the image.
+
+Template for host adaptation, not literal boilerplate to include in every image:
+
+> Create one complete publication method figure explaining [scientific point]. Preserve [module/branch/edge invariants]. The only printed labels are [exact whitelist]. Express [key mechanism] using [specific meaningful visual encoding]. Compose [layout], with the innovation visually dominant and the surrounding stages compact. Use [palette/line/text style]; avoid large internal headings, explanatory paragraphs, decorative stage numbers, generic clipart and irrelevant equations. Reference image 1 supplies [role]; do not copy its scientific content. Keep real data panels unchanged. Deliver [requested dimensions/background].
+
+For an edit, use the current selected candidate as the first image. Specify **change / preserve / acceptance check**. Example: change only the incorrect outgoing arrow in the routing region; preserve module names, layout, colors and all other connectors; verify that the final edge follows the locked source. Keep a new output version. Do not regenerate the whole composition to repair one label. Region preservation is a requested constraint, not a pixel-level guarantee; inspect the result.
+
+A second composition candidate is useful when the design is undecided, but candidate count and edit rounds follow the task budget. Do not run unlimited critique/regeneration loops. No real dataset crop, heatmap or numerical result may be invented to improve the appearance.

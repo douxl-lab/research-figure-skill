@@ -18,7 +18,7 @@ from kernels import ALIASES, discover, python_for_design
 
 ROOT = Path(__file__).resolve().parents[1]
 MODES = ("auto", "design-native", "design-provider", "tikz",
-         "plot-matplotlib", "prompt-only", "layout", "native-svg")
+         "plot-matplotlib", "prompt-only", "layout", "native-svg", "image2-api", "llm-svg")
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -30,7 +30,8 @@ def read_json(path: Path) -> dict[str, Any]:
 
 def make_plan(spec: dict[str, Any], capabilities: dict[str, dict[str, Any]], *,
               mode: str = "auto", host_image_tool: str | None = None,
-              allow_external: bool = False) -> dict[str, Any]:
+              allow_external: bool = False, image2_root: Path | None = None,
+              dry_run: bool = False) -> dict[str, Any]:
     mode = ALIASES.get(mode, mode)
     if mode not in MODES:
         raise ValueError(f"Unknown mode: {mode}")
@@ -51,10 +52,18 @@ def make_plan(spec: dict[str, Any], capabilities: dict[str, dict[str, Any]], *,
         "format": "rfs-workflow/1.0", "status": "PLANNED_NOT_EXECUTED",
         "mode": None, "capabilities": capabilities,
         "host_image_tool": host_image_tool, "external_authorized": allow_external,
+        "image2_root": str(image2_root.resolve()) if image2_root else None, "dry_run": dry_run,
         "references": ["references/orchestration.md"], "blockers": [],
         "verification": {"runtime": "PENDING", "scientific": "PENDING",
                          "visual": "PENDING", "native_editability": "PENDING"},
     }
+    if image2_root is not None:
+        from image2_adapter import backend_script
+        try:
+            backend_script(image2_root, "generate")
+            backend_script(image2_root, "edit")
+        except (ValueError, OSError):
+            plan["blockers"].append("Explicit image2-api installation is invalid; do not silently replace it")
     if kind in {"plot", "quantitative"}:
         if mode not in {"auto", "plot-matplotlib"}:
             raise ValueError("Measured data requires plot-matplotlib, never an image generator")
@@ -71,6 +80,8 @@ def make_plan(spec: dict[str, Any], capabilities: dict[str, dict[str, Any]], *,
                 mode = "native-svg"
             elif host_image_tool:
                 mode = "design-native" if canonical and pb["files"]["skill/native_host.py"] else "bundled-host-workflow"
+            elif image2_root is not None and (allow_external or dry_run):
+                mode = "image2-api"
             elif allow_external and pb["files"]["skill/exchange.py"]:
                 mode = "design-provider"
             else:
@@ -88,6 +99,19 @@ def make_plan(spec: dict[str, Any], capabilities: dict[str, dict[str, Any]], *,
                 plan["blockers"].append("Provider disclosure/cost authorization missing")
             if not pb["files"]["skill/exchange.py"]:
                 plan["blockers"].append("Design exchange entry missing")
+        elif mode == "image2-api":
+            if not canonical:
+                plan["blockers"].append("image2-api requires canonical FigureSpec v1")
+            if image2_root is None:
+                plan["blockers"].append("Supply the actual --image2-root installation")
+            if not (allow_external or dry_run):
+                plan["blockers"].append("Service/data/cost authorization is missing; an offline dry-run needs none")
+            plan["references"].append("references/local-image-pipeline.md")
+        elif mode == "llm-svg":
+            if not canonical:
+                plan["blockers"].append("LLM SVG handoff requires canonical FigureSpec v1")
+            plan["status"] = "HOST_ACTION_REQUIRED"
+            plan["references"].append("references/mechanism-figure-workflow.md")
         elif mode == "layout":
             if not all(cv["files"].values()):
                 plan["blockers"].append("Layout renderer/validator missing")
@@ -98,10 +122,12 @@ def make_plan(spec: dict[str, Any], capabilities: dict[str, dict[str, Any]], *,
         elif mode == "tikz" and not canonical:
             plan["blockers"].append("TikZ requires canonical FigureSpec v1")
         plan["mode"] = mode
-        if mode in {"design-native", "design-provider", "bundled-host-workflow"}:
+        if mode in {"design-native", "design-provider", "bundled-host-workflow", "image2-api"}:
             plan["references"].append("references/design-core.md")
         if mode == "tikz":
             plan["references"].append("references/tikz-workflow.md")
+    if dry_run and plan["mode"] != "image2-api":
+        plan["blockers"].append("--dry-run is supported only for image2-api; use plan for other routes")
     if plan["blockers"]:
         plan["status"] = "BLOCKED"
     return plan
@@ -130,7 +156,8 @@ def _invoke(command: list[str], *, cwd: Path, env: dict[str, str], timeout: int,
 
 def execute(plan: dict[str, Any], spec: Path, out: Path, *, root: Path = ROOT,
             candidates: int = 2, timeout: int = 1800,
-            cvpr_spec: Path | None = None, layout_spec: Path | None = None) -> dict[str, Any]:
+            cvpr_spec: Path | None = None, layout_spec: Path | None = None,
+            image2_config: Path | None = None, prompt: Path | None = None) -> dict[str, Any]:
     if plan["status"] == "BLOCKED":
         raise ValueError("; ".join(plan["blockers"]))
     if not 1 <= candidates <= 8 or not 1 <= timeout <= 7200:
@@ -144,6 +171,8 @@ def execute(plan: dict[str, Any], spec: Path, out: Path, *, root: Path = ROOT,
     cvpr_spec = layout_spec or cvpr_spec
     if mode == "layout" and (cvpr_spec is None or not cvpr_spec.is_file()):
         raise ValueError("Supply a reviewed --layout-spec; layout YAML is NOT FigureSpec v1")
+    if mode == "image2-api" and (image2_config is None or prompt is None):
+        raise ValueError("image2-api requires --image2-config and a reviewed --prompt file; see local-image-pipeline.md")
     env = dict(os.environ)
     pb_root = plan["capabilities"]["design"]["root"]
     if pb_root:
@@ -164,6 +193,23 @@ def execute(plan: dict[str, Any], spec: Path, out: Path, *, root: Path = ROOT,
             task = _invoke(native + ["next", "--job", str(job)], cwd=pb, env=env, timeout=60)
             result = {"status": "HOST_ACTION_REQUIRED", "mode": mode, "job": str(job),
                       "next_task": task, "instruction": "Execute next/record through all five stages and verify; preparation is NOT image generation"}
+        elif mode == "image2-api":
+            command = [sys.executable, str(root / "scripts/image2_adapter.py"),
+                       "--spec", str(spec), "--prompt", str(prompt.resolve()),
+                       "--config", str(image2_config.resolve()), "--image2-root", plan["image2_root"],
+                       "--out", str(out / "rendered"), "--candidates", str(candidates)]
+            if plan["dry_run"]:
+                command.append("--dry-run")
+            elif plan["external_authorized"]:
+                command.append("--allow-external")
+            result = _invoke(command, cwd=spec.parent, env=env, timeout=timeout)
+            result["mode"] = mode
+        elif mode == "llm-svg":
+            (out / "figure-spec.json").write_bytes(spec.read_bytes())
+            result = {"status": "HOST_ACTION_REQUIRED", "mode": mode,
+                      "scientific_spec": str(out / "figure-spec.json"),
+                      "instruction": "The host LLM authors SVG code directly, then renders and inspects it. Do not call the image API or claim a generated SVG yet",
+                      "references": plan["references"]}
         elif mode in {"bundled-host-workflow", "source-preserving-handoff"}:
             result = {"status": "HOST_ACTION_REQUIRED", "mode": mode,
                       "references": plan["references"], "scientific_spec": str(spec),
@@ -210,6 +256,10 @@ def main() -> int:
     parser.add_argument("--mode", default="auto", metavar="MODE", help=", ".join(MODES))
     parser.add_argument("--host-image-tool", help="Actual available host tool name; never infer one from installed packages")
     parser.add_argument("--allow-external", action="store_true", help="Only after task/service-specific disclosure and cost authorization")
+    parser.add_argument("--image2-root", type=Path, help="Explicit optional image2-api installation; never auto-cloned")
+    parser.add_argument("--image2-config", type=Path, help="Project-local service config; no credentials in source")
+    parser.add_argument("--prompt", type=Path, help="Reviewed prompt for image2-api")
+    parser.add_argument("--dry-run", action="store_true", help="image2-api only: offline request validation, never generation")
     parser.add_argument("--layout-spec", "--cvpr-spec", dest="layout_spec", type=Path)
     parser.add_argument("--candidates", type=int, default=2)
     parser.add_argument("--timeout", type=int, default=1800)
@@ -224,14 +274,16 @@ def main() -> int:
             if args.spec is None:
                 raise ValueError("--spec is required")
             plan = make_plan(read_json(args.spec), caps, mode=args.mode,
-                             host_image_tool=args.host_image_tool, allow_external=args.allow_external)
+                             host_image_tool=args.host_image_tool, allow_external=args.allow_external,
+                             image2_root=args.image2_root, dry_run=args.dry_run)
             if args.action == "plan":
                 result = plan
             else:
                 if args.out is None:
                     raise ValueError("--out is required")
                 result = execute(plan, args.spec, args.out, candidates=args.candidates,
-                                 timeout=args.timeout, layout_spec=args.layout_spec)
+                                 timeout=args.timeout, layout_spec=args.layout_spec,
+                                 image2_config=args.image2_config, prompt=args.prompt)
         print(json.dumps(result, indent=2, ensure_ascii=False))
         return 2 if result.get("status") == "BLOCKED" else 0
     except (ValueError, OSError) as exc:

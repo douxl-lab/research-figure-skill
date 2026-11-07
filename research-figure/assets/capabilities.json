@@ -1,6 +1,6 @@
 {
   "format": "rfs-capabilities/2.0",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "upstream_lock": "assets/upstreams.lock.json",
   "modules": [
     {
@@ -15,6 +15,15 @@
       ]
     },
     {
+      "id": "image-generation",
+      "role": "complete raster generation and reference-image edits; no implicit provider discovery",
+      "guide": "references/local-image-pipeline.md",
+      "entry": "scripts/image2_adapter.py",
+      "mode": "image2-api",
+      "runtime": "explicit external image2-api installation",
+      "bundled": false
+    },
+    {
       "id": "layout",
       "role": "local template/gallery library, vector export and audits",
       "guide": "references/layout-library.md",
@@ -24,9 +33,13 @@
     },
     {
       "id": "vector",
-      "role": "explicit TikZ/math vector source",
+      "role": "explicit host-authored SVG or TikZ vector source",
       "guide": "references/tikz-workflow.md",
-      "entry": "scripts/tikz_renderer.py"
+      "entry": "scripts/tikz_renderer.py",
+      "modes": [
+        "llm-svg",
+        "tikz"
+      ]
     },
     {
       "id": "plot",
@@ -46,5 +59,11 @@
       "guide": "references/quality-gates.md",
       "entry": "scripts/native_qa.py"
     }
-  ]
+  ],
+  "mechanism_default": {
+    "strategy": "complete-image-first",
+    "output_format": "png",
+    "svg_policy": "host-code-opt-in",
+    "automatic_vector_fallback": false
+  }
 }

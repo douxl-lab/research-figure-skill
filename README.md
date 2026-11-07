@@ -4,13 +4,36 @@
 
 **一个入口，按任务主动选择内部能力。** 设计内核、模板与参考图库已随包提供；用户不需要逐个点名第三方工具。`research-figure-skill` 是仓库名，实际安装入口是 [`research-figure/SKILL.md`](research-figure/SKILL.md)。
 
+## 0.9.0：生图模型优先，SVG 按需
+
+**默认由生图模型完成整张机制图，再看图审查与局部编辑。** 不再默认把 AI 限制为局部素材生产，也不要求先用代码搭出整图。少字多图，用特征、Token、Glyph 和信息流解释机制；公式只在确有必要时出现。
+
+优先使用实际可用的宿主生图工具；在本地/API 环境中，可以接入单独安装的 [image2-api](https://github.com/techdou/image2-api)。新适配器使用其生成与编辑 CLI，默认 PNG，支持多参考图和蒙版，保留提示词、源规范、版本图片与审查状态。不硬编码某个最新模型，不自动重试或切换服务商。干跑不调用 API，也不能当作出图成功。
+
+明确要求可编辑 SVG 时，优先由宿主 LLM 撰写 SVG 源码并实际渲染检查；无需为 SVG 默认调用生图 API。`llm-svg` 是宿主任务交接，不是 CLI 自行调用另一个 LLM。真实实验曲线和观测图仍由真实数据生成。
+
+```bash
+# 在项目目录准备 figure-spec.json、mechanism-prompt.txt 和私有 image-provider 配置
+python research-figure/scripts/workflow.py run --mode image2-api \
+  --image2-root /installed/image2-api --image2-config /project/image-provider.json \
+  --spec /project/figure-spec.json --prompt /project/mechanism-prompt.txt \
+  --dry-run --out /project/figures/F01-dry
+
+# 审查服务、数据与费用授权后：移除 --dry-run，加 --allow-external，并改用全新输出目录。
+# 仅在明确要求 SVG 时：
+python research-figure/scripts/workflow.py run --mode llm-svg \
+  --spec /project/figure-spec.json --out /project/figures/F01-svg
+```
+
+配置、真实调用、参考图/蒙版编辑和边界见[生图适配指引](research-figure/references/local-image-pipeline.md)；完整制作流程见[机制图 SOP](research-figure/references/mechanism-figure-workflow.md)。发布包更新不等于客户端安装副本已更新；离线测试不证明真实模型的视觉质量。
+
 ## 能力与边界
 
 | 模块 | 职责 | 运行条件 |
 | --- | --- | --- |
 | `design` | 方法图、机制图、架构图的检索、规划、风格、生图协调与评审 | 包内协调代码；实际生图需要宿主工具或已授权的模型服务 |
 | `layout` | 本地素材检索、模板布局、SVG / 原生 PPTX / VSDX 导出与审计 | 包内代码与素材；基础矢量导出使用 Python 标准库 |
-| `vector` | 明确要求的 TikZ 与精确数学矢量表达 | RFS 渲染器及 XeLaTeX / Poppler 等对应工具 |
+| `vector` | 按需由宿主 LLM 撰写 SVG，或使用 TikZ 精确矢量表达 | RFS 渲染器及 XeLaTeX / Poppler 等对应工具 |
 | `plot` | 真实实验数据图与可复现绘图代码 | Matplotlib 与完整输入数据 |
 | `reconstruction` / `audit` | 已批准图片的原生重建交接、对象检查与导出检查 | 实际可用的编辑器、导出器及审计依赖 |
 
