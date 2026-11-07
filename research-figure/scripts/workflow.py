@@ -7,6 +7,7 @@ No downloads, provider calls, or credential discovery occur implicitly.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import subprocess
@@ -18,7 +19,7 @@ from kernels import ALIASES, discover, python_for_design
 
 ROOT = Path(__file__).resolve().parents[1]
 MODES = ("auto", "design-native", "design-provider", "tikz",
-         "plot-matplotlib", "prompt-only", "layout", "native-svg", "image2-api", "llm-svg")
+         "plot-matplotlib", "prompt-only", "layout", "native-svg", "image2-api", "llm-svg", "hybrid-assembly")
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -107,6 +108,15 @@ def make_plan(spec: dict[str, Any], capabilities: dict[str, dict[str, Any]], *,
             if not (allow_external or dry_run):
                 plan["blockers"].append("Service/data/cost authorization is missing; an offline dry-run needs none")
             plan["references"].append("references/local-image-pipeline.md")
+        elif mode == "hybrid-assembly":
+            if not canonical:
+                plan["blockers"].append("Hybrid assembly requires canonical FigureSpec v1")
+            if spec.get("datasets"):
+                plan["blockers"].append("Measured content must retain its source-preserving route")
+            if not host_image_tool and not (image2_root is not None and allow_external):
+                plan["blockers"].append("Hybrid assets need an actual host image tool or explicitly configured authorized image2-api; no silent fallback")
+            plan["status"] = "HOST_ACTION_REQUIRED"
+            plan["references"].extend(["references/mechanism-figure-workflow.md", "references/local-image-pipeline.md"])
         elif mode == "llm-svg":
             if not canonical:
                 plan["blockers"].append("LLM SVG handoff requires canonical FigureSpec v1")
@@ -122,7 +132,7 @@ def make_plan(spec: dict[str, Any], capabilities: dict[str, dict[str, Any]], *,
         elif mode == "tikz" and not canonical:
             plan["blockers"].append("TikZ requires canonical FigureSpec v1")
         plan["mode"] = mode
-        if mode in {"design-native", "design-provider", "bundled-host-workflow", "image2-api"}:
+        if mode in {"design-native", "design-provider", "bundled-host-workflow", "image2-api", "hybrid-assembly"}:
             plan["references"].append("references/design-core.md")
         if mode == "tikz":
             plan["references"].append("references/tikz-workflow.md")
@@ -152,6 +162,47 @@ def _invoke(command: list[str], *, cwd: Path, env: dict[str, str], timeout: int,
     if not isinstance(value, dict):
         raise ValueError("Backend response must be a JSON object")
     return value
+
+
+def hybrid_handoff(spec: Path, out: Path, plan: dict[str, Any]) -> dict[str, Any]:
+    """Prepare source-bound host tasks, never pretend to render or call a model."""
+    raw = spec.read_bytes()
+    source = out / "figure-spec.json"
+    source.write_bytes(raw)
+    stages = [
+        {"id": "scaffold", "owner": "host-code", "depends_on": [],
+         "instruction": "Code and render the scaffold; lock IDs, exact labels, ports, arrows and asset slots against FigureSpec. Inspect before asset generation.",
+         "required_outputs": ["scaffold source", "rendered scaffold", "slot geometry and style specification"]},
+        {"id": "assets", "owner": "image-model", "depends_on": ["scaffold"],
+         "instruction": "Generate only scoped assets for inspected slots. Preserve actual bytes, prompt/receipt, origin and SHA-256. Verify style and requested alpha; never invent observations or measurements.",
+         "required_outputs": ["accepted asset files", "asset ledger with slot IDs, hashes and provenance"]},
+        {"id": "composition", "owner": "host-code", "depends_on": ["scaffold", "assets"],
+         "instruction": "Compose accepted assets into locked slots with code, preserve aspect ratios, and keep labels/arrows separate. Do not replace this step with full-image redrawing.",
+         "required_outputs": ["composition source", "final composed image", "export information"]},
+        {"id": "review", "owner": "host-vision-and-source-review", "depends_on": ["composition"],
+         "instruction": "Inspect the saved final export against source topology and at intended size. Check labels, overlap, style and transparency. Repair affected code/assets only; label mixed vector/raster editability honestly.",
+         "required_outputs": ["observed scientific review", "observed visual review", "remaining issues"]},
+    ]
+    for stage in stages:
+        stage.update(status="PENDING", artifacts=[])
+    job = {
+        "format": "rfs-hybrid-workflow/1.0", "status": "HOST_ACTION_REQUIRED",
+        "strategy": "code-scaffold+model-assets", "tier": "core",
+        "source_contract": {"file": "figure-spec.json", "sha256": hashlib.sha256(raw).hexdigest()},
+        "asset_backend": {"kind": "host" if plan.get("host_image_tool") else "image2-api",
+                          "host_image_tool": plan.get("host_image_tool"),
+                          "image2_root": plan.get("image2_root"),
+                          "external_authorized": plan.get("external_authorized", False)},
+        "stages": stages, "scientific_review": "PENDING", "visual_review": "PENDING",
+        "rendering_executed": False, "generation_executed": False,
+        "editability": "NOT_INSPECTED",
+    }
+    path = out / "hybrid-job.json"
+    path.write_text(json.dumps(job, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return {"status": "HOST_ACTION_REQUIRED", "mode": "hybrid-assembly", "job": str(path),
+            "scientific_spec": str(source), "next_task": stages[0],
+            "instruction": "Execute scaffold, assets, composition and review with real host tools. Preparation is not rendering or image generation.",
+            "scientific_review": "PENDING", "visual_review": "PENDING"}
 
 
 def execute(plan: dict[str, Any], spec: Path, out: Path, *, root: Path = ROOT,
@@ -204,6 +255,8 @@ def execute(plan: dict[str, Any], spec: Path, out: Path, *, root: Path = ROOT,
                 command.append("--allow-external")
             result = _invoke(command, cwd=spec.parent, env=env, timeout=timeout)
             result["mode"] = mode
+        elif mode == "hybrid-assembly":
+            result = hybrid_handoff(spec, out, plan)
         elif mode == "llm-svg":
             (out / "figure-spec.json").write_bytes(spec.read_bytes())
             result = {"status": "HOST_ACTION_REQUIRED", "mode": mode,

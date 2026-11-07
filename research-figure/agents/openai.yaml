@@ -1,6 +1,6 @@
 interface:
   display_name: "Research Figure Studio"
-  short_description: "Image-first scientific figures, focused edits and source audits"
-  default_prompt: "Use $research-figure to create or revise my scientific figure. Default to complete-image generation and targeted edits with few labels. Use the bundled design references; write SVG code only when requested. Report actual artifacts and pending reviews."
+  short_description: "Scientific figures: image-first and hybrid assembly"
+  default_prompt: "Use $research-figure to create or revise my scientific figure. Default to complete-image generation. Keep code scaffold + model-generated assets as a core workflow when requested or suited to the agreed task. Inspect actual outputs; preserve exact topology and few labels. Report artifacts and pending reviews."
 policy:
   allow_implicit_invocation: true

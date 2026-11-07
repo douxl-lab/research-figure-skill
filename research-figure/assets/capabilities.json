@@ -1,6 +1,6 @@
 {
   "format": "rfs-capabilities/2.0",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "upstream_lock": "assets/upstreams.lock.json",
   "modules": [
     {
@@ -22,6 +22,16 @@
       "mode": "image2-api",
       "runtime": "explicit external image2-api installation",
       "bundled": false
+    },
+    {
+      "id": "hybrid-assembly",
+      "role": "first-class code scaffold + generated assets + deterministic composition + review",
+      "guide": "references/mechanism-figure-workflow.md#core-hybrid-assembly-workflow",
+      "entry": "scripts/workflow.py",
+      "mode": "hybrid-assembly",
+      "tier": "core",
+      "runtime": "host code/rendering tools plus an actual host image tool or explicit authorized image2-api",
+      "execution": "host-action-required; preparation is not scaffold rendering or image generation"
     },
     {
       "id": "layout",
@@ -65,5 +75,9 @@
     "output_format": "png",
     "svg_policy": "host-code-opt-in",
     "automatic_vector_fallback": false
-  }
+  },
+  "core_production_workflows": [
+    "complete-image-first",
+    "hybrid-assembly"
+  ]
 }

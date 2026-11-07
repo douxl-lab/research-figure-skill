@@ -4,6 +4,7 @@
 | --- | --- | --- |
 | design | One source-grounded five-stage visual-design chain | Bundled `kernels/design`, host tools or authorized provider |
 | image-generation | Complete raster generation and reference-image edits | Optional explicit external image2-api runtime; `image2_adapter.py` |
+| hybrid-assembly | Core code scaffold → model assets → deterministic composition → review | `workflow.py` host-task handoff; bundled layout or host code plus an actual image backend |
 | layout | Local reference/template/gallery search; native vector export and file audits | Bundled `kernels/layout` |
 | vector | Explicit SVG code or TikZ output | Host LLM SVG authoring; RFS TikZ adapter with separate system compiler |
 | plot | Real measured data and reproducible plots | RFS Matplotlib adapter; separate library dependency |

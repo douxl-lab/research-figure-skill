@@ -4,9 +4,20 @@
 
 **一个入口，按任务主动选择内部能力。** 设计内核、模板与参考图库已随包提供；用户不需要逐个点名第三方工具。`research-figure-skill` 是仓库名，实际安装入口是 [`research-figure/SKILL.md`](research-figure/SKILL.md)。
 
-## 0.9.0：生图模型优先，SVG 按需
+## 0.9.1：两条核心工作流，默认生图优先
 
 **默认由生图模型完成整张机制图，再看图审查与局部编辑。** 不再默认把 AI 限制为局部素材生产，也不要求先用代码搭出整图。少字多图，用特征、Token、Glyph 和信息流解释机制；公式只在确有必要时出现。
+
+**“先用代码搭骨架，再让模型补素材”仍是核心功能。** `hybrid-assembly` 路线由代码固定布局、精确标签、端口与连接，生图模型生成局部视觉素材，再由代码组装和验收。它不是降级备用方案，也不要求图中存在公式。用户明确选择或任务需要固定结构、统一系列图及复用素材时采用；普通机制图仍默认整图生图，两条路线不互相替代。
+
+```bash
+# 准备混合式任务；返回待执行阶段，不代表已经生成骨架或最终图片
+python research-figure/scripts/workflow.py run --mode hybrid-assembly \
+  --spec /project/figure-spec.json --host-image-tool ACTUAL_AVAILABLE_TOOL \
+  --out /project/figures/F01-hybrid
+```
+
+宿主继续执行 `hybrid-job.json` 中的骨架、素材、组装、验收四个阶段。复用现有布局渲染器或宿主代码，不另造一套布局内核。标签与箭头可编辑不代表生成素材也是矢量；混合产物须如实标注。详见[核心混合式 SOP](research-figure/references/mechanism-figure-workflow.md#core-hybrid-assembly-workflow)。
 
 优先使用实际可用的宿主生图工具；在本地/API 环境中，可以接入单独安装的 [image2-api](https://github.com/techdou/image2-api)。新适配器使用其生成与编辑 CLI，默认 PNG，支持多参考图和蒙版，保留提示词、源规范、版本图片与审查状态。不硬编码某个最新模型，不自动重试或切换服务商。干跑不调用 API，也不能当作出图成功。
 
@@ -32,6 +43,7 @@ python research-figure/scripts/workflow.py run --mode llm-svg \
 | 模块 | 职责 | 运行条件 |
 | --- | --- | --- |
 | `design` | 方法图、机制图、架构图的检索、规划、风格、生图协调与评审 | 包内协调代码；实际生图需要宿主工具或已授权的模型服务 |
+| `hybrid-assembly` | 核心混合式：代码骨架 → 生图素材 → 代码组装 → 看图验收 | 宿主代码/渲染工具与实际生图工具，或已授权 image2-api；CLI 提供阶段交接 |
 | `layout` | 本地素材检索、模板布局、SVG / 原生 PPTX / VSDX 导出与审计 | 包内代码与素材；基础矢量导出使用 Python 标准库 |
 | `vector` | 按需由宿主 LLM 撰写 SVG，或使用 TikZ 精确矢量表达 | RFS 渲染器及 XeLaTeX / Poppler 等对应工具 |
 | `plot` | 真实实验数据图与可复现绘图代码 | Matplotlib 与完整输入数据 |

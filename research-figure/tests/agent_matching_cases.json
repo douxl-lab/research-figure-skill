@@ -1,5 +1,5 @@
 {
-  "corpus_version": "0.6.0",
+  "corpus_version": "0.9.1",
   "notice": "Human-authored positive/negative/competing-skill expectations; these are NOT observed LLM invocation metrics. Test metadata/dispatched CLI separately.",
   "cases": [
     {
@@ -351,6 +351,20 @@
       "prompt": "Only use $paper-fig to replace a screenshot on slide 4; don't invoke any scientific figure router.",
       "activate": false,
       "expected_route": "explicit-other-skill"
+    },
+    {
+      "id": "P25",
+      "lang": "zh",
+      "prompt": "为论文机制图先用代码搭骨架，固定标签和箭头，再用生图模型补素材并组装。",
+      "activate": true,
+      "expected_route": "hybrid-assembly"
+    },
+    {
+      "id": "P26",
+      "lang": "en",
+      "prompt": "Build a scientific method figure with a code-defined scaffold, model-generated assets and deterministic final composition.",
+      "activate": true,
+      "expected_route": "hybrid-assembly"
     }
   ]
 }

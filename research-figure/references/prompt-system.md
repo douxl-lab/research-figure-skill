@@ -55,6 +55,12 @@ PaperBanana's own five agents already plan, style, visualize and critique. Canon
 
 A high-quality image is a visual reference. After selection, inspect it and author detailed **image-anchored** notes using `assets/design-notes-template.md`; the compiler's pre-image design brief is a starting point, **not a substitute for observed image details**. An approved composition does not make fabricated numbers or false arrow relationships acceptable. Continue to [reconstruction](reconstruction.md) only when editable/native output is requested; otherwise deliver the reviewed image in the requested raster format.
 
+## Core hybrid prompt contract
+
+For `hybrid-assembly`, code owns the global scaffold: module labels, ports, arrows, geometry and final composition. First author and inspect that scaffold, then issue **scoped asset prompts** with a target slot, aspect ratio, scientific role, palette, viewpoint, background/alpha requirement and explicit exclusions. Share a style anchor across assets. Do not reuse a complete-figure prompt for a slot or make the model redraw the scaffold. Most asset prompts contain no text or global connectors; source-grounded internal interactions inside a glyph are allowed when essential.
+
+Generate and inspect the real asset files, then compose them by code and inspect the final result. Keep the original scaffold, prompts/receipts, asset hashes and slot assignments. For an asset defect, regenerate only that asset and rerun composition; for a label/edge defect, change the code after source verification. Full-image generation remains the default, but hybrid assembly is a core workflow, not deprecated or a low-quality fallback.
+
 ## Complete-image mechanism brief (default)
 
 Write a visual design brief, not a paragraph to print inside boxes. Use the actual source and a small exact-text whitelist. Do not add formulas, tensor dimensions, stage numbers, slogans or explanatory subtitles just to make a figure look academic. Equations belong only when they clarify this particular mechanism.
